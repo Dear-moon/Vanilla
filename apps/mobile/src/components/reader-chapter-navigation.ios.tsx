@@ -9,6 +9,7 @@ export function ReaderChapterNavigation({
   onPageProgressChange,
   pageCurrent,
   pageProgress,
+  pageStepped = true,
   pageTotal,
 }: ReaderChapterNavigationProps) {
   return (
@@ -18,6 +19,7 @@ export function ReaderChapterNavigation({
           direction={direction}
           onValueChange={onPageProgressChange}
           pageCurrent={pageCurrent}
+          pageStepped={pageStepped}
           pageTotal={pageTotal}
           progress={pageProgress}
           visible={pageTotal > 0}

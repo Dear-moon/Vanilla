@@ -189,6 +189,7 @@ export class ExpoSignalRTransport implements SignalRTransport {
   #generation = 0;
   #desiredConnected = false;
   #eventListeners = new Map<string, Set<SignalREventListener>>();
+  readonly #reconnectedListeners = new Set<() => void>();
 
   constructor(
     credentials: CredentialStore,
@@ -252,6 +253,11 @@ export class ExpoSignalRTransport implements SignalRTransport {
       this.#connection?.off(methodName, listener);
       if (current.size === 0) this.#eventListeners.delete(methodName);
     };
+  }
+
+  subscribeReconnected(listener: () => void): Unsubscribe {
+    this.#reconnectedListeners.add(listener);
+    return () => { this.#reconnectedListeners.delete(listener); };
   }
 
   close(): Promise<void> {
@@ -326,7 +332,11 @@ export class ExpoSignalRTransport implements SignalRTransport {
 
       connection.serverTimeoutInMilliseconds = REQUEST_TIMEOUT_MS;
       connection.onreconnecting(() => this.#ensureReconnectGate());
-      connection.onreconnected(() => this.#releaseReconnectGate());
+    connection.onreconnected(() => {
+      this.#releaseReconnectGate();
+      if (!this.#desiredConnected || this.#connection !== connection) return;
+      for (const listener of this.#reconnectedListeners) listener();
+    });
     connection.onclose(() => this.#releaseReconnectGate());
     this.#connection = connection;
     for (const [methodName, listeners] of this.#eventListeners) {

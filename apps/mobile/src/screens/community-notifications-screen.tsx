@@ -27,6 +27,7 @@ import type {
   AppNotificationTone,
 } from '@novella/api-client';
 
+import { NativeScreenScaffold } from '@/components/native-screen-scaffold';
 import { CommunityNotificationsNavigation } from '@/components/community/community-navigation';
 import {
   CommunityEmptyState,
@@ -51,8 +52,7 @@ export function CommunityNotificationsScreen() {
   const { colors } = useAppTheme();
   const { t } = useTranslation('community');
   const { t: tCommon } = useTranslation('common');
-  const { loadMore, mark, markAll, refresh, retry, state } = useCommunityNotifications();
-  const hasUnread = state.items.some((item) => !item.isRead);
+  const { hasUnread, loadMore, mark, markAll, refresh, retry, state } = useCommunityNotifications();
 
   const openBook = useCallback(async (bookId: number) => {
     try {
@@ -125,7 +125,20 @@ export function CommunityNotificationsScreen() {
       <>
         <Stack.Screen options={{ title: t('notifications.title') }} />
 
-        <View style={[styles.root, { paddingTop: insets.top }]}>
+        <NativeScreenScaffold
+          actions={hasUnread ? [{
+            accessibilityLabel: t('actions.markAllRead'),
+            enabled: !state.marking,
+            icon: 'check',
+            id: 'mark-all',
+          }] : []}
+          largeTitle={false}
+          onActionPress={() => void markAll()}
+          onBackPress={() => router.back()}
+          showBackButton
+          title={t('notifications.title')}
+        >
+        <View style={[styles.root, { paddingTop: process.env.EXPO_OS === 'android' ? 0 : insets.top }]}>
         <FlatList
           ListEmptyComponent={
             state.loading ? (
@@ -173,8 +186,13 @@ export function CommunityNotificationsScreen() {
           showsVerticalScrollIndicator={false}
         />
         </View>
+        </NativeScreenScaffold>
 
-        <CommunityNotificationsNavigation hidden={!hasUnread} onMarkAll={() => void markAll()} />
+        <CommunityNotificationsNavigation
+          disabled={state.marking}
+          hidden={!hasUnread}
+          onMarkAll={() => void markAll()}
+        />
       </>
     </CommunityPaperProvider>
   );

@@ -4,7 +4,7 @@ const buildNumber = process.env.APP_BUILD_NUMBER;
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
-  name: 'Novella',
+  name: 'Vanilla',
   slug: 'novella',
   // CI 通过 v* tag 注入 APP_VERSION；本地开发回退到 package.json 版本。
   version: process.env.APP_VERSION || config.version || '2.0.0',
@@ -90,7 +90,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       // Android requests no READ_MEDIA_* granular permission.
       granularPermissions: [],
       photosPermission: false,
-      savePhotosPermission: '允许 Novella 将图片保存到你的照片图库。',
+      savePhotosPermission: '允许 Vanilla 将图片保存到你的照片图库。',
     }],
     'expo-sharing',
   ],

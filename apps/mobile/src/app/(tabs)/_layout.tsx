@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 
 import { useProfile } from '@/hooks/use-profile';
 import { runAutomaticAppUpdateCheck } from '@/services/app-update-alerts';
+import { formatUnreadBadge, getUnreadCounts } from '@/services/unread-counts';
 import { useAppTheme } from '@/theme/app-theme';
 
 export default function TabsLayout() {
@@ -11,7 +12,7 @@ export default function TabsLayout() {
   const { t } = useTranslation('navigation');
   const { t: tSettings } = useTranslation('settings');
   const { profile } = useProfile();
-  const unreadNotifications = profile?.unreadNotificationCount ?? 0;
+  const unreadBadge = formatUnreadBadge(getUnreadCounts(profile).total);
 
   useEffect(() => {
     void runAutomaticAppUpdateCheck((key) => tSettings(key));
@@ -49,9 +50,9 @@ export default function TabsLayout() {
           sf="text.bubble.fill"
         />
         <NativeTabs.Trigger.Label>{t('tabs.community')}</NativeTabs.Trigger.Label>
-        {unreadNotifications > 0 ? (
+        {unreadBadge ? (
           <NativeTabs.Trigger.Badge>
-            {unreadNotifications > 99 ? '99+' : String(unreadNotifications)}
+            {unreadBadge}
           </NativeTabs.Trigger.Badge>
         ) : null}
       </NativeTabs.Trigger>

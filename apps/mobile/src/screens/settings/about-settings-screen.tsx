@@ -9,7 +9,7 @@ import { NativeToggleRow, NativeValueRow } from '@/components/native-setting-con
 import { runManualAppUpdateCheck } from '@/services/app-update-alerts';
 import { updateAppSettings, useAppSettings } from '@/services/settings';
 
-const repositoryUrl = 'https://github.com/celia-sh/Novella';
+const repositoryUrl = 'https://github.com/Dear-moon/Vanilla';
 const novellaUrl = 'https://novella.celia.sh';
 const lightNovelShelfUrl = 'https://www.lightnovel.app';
 const lightNovelGroupUrl = 'https://t.me/+zD4ACGdOROs3MmI1';

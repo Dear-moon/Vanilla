@@ -10,6 +10,7 @@ export function ReaderChapterNavigation({
   onPageProgressChange,
   pageCurrent,
   pageProgress,
+  pageStepped = true,
   pageTotal,
 }: ReaderChapterNavigationProps) {
   if (chromeHidden || pageTotal === 0) return null;
@@ -23,6 +24,7 @@ export function ReaderChapterNavigation({
           direction={direction}
           onValueChange={onPageProgressChange}
           pageCurrent={pageCurrent}
+          pageStepped={pageStepped}
           pageTotal={pageTotal}
           progress={pageProgress}
           visible

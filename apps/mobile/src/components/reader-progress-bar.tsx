@@ -17,6 +17,7 @@ export function ReaderNativeProgressBar({
   pageTotal,
   progress,
   remainingText,
+  step,
 }: ReaderNativeProgressBarProps) {
   const { colors } = useAppTheme();
   const { width } = useWindowDimensions();
@@ -31,7 +32,7 @@ export function ReaderNativeProgressBar({
   const handleChange = (value: number) => {
     if (disabled) return;
     const next = isReversed ? 1 - value : value;
-    const snapped = snapReaderProgress(next, pageTotal);
+    const snapped = step > 0 ? snapReaderProgress(next, pageTotal) : next;
     setDraft(snapped);
     onProgressChange(snapped);
   };

@@ -7,7 +7,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { IconArrowRight } from '@tabler/icons-react-native';
 import { useTranslation } from 'react-i18next';
 
-import NovellaLogo from '../../assets/novella-logo.svg';
 import {
   AuthFormError,
   AuthFormLayout,
@@ -68,7 +67,7 @@ export function AuthWelcomeScreen() {
             ]
           : [styles.welcomeContent, { paddingBottom: Math.max(22, insets.bottom + 12) }]}
       >
-        <NovellaLogo fill={palette.foreground} height={33} width={126} />
+        <Text style={[styles.welcomeBrand, { color: palette.foreground }]}>Vanilla</Text>
         <View style={styles.welcomeCopy}>
           <Text style={[styles.welcomeTitle, { color: palette.foreground }]}>{t('welcome.title')}</Text>
           <Text style={[styles.welcomeDescription, { color: palette.secondary }]}>
@@ -169,6 +168,7 @@ export function SignInCredentialsScreen({ initialEmail = '' }: { initialEmail?: 
 }
 
 const styles = StyleSheet.create({
+  welcomeBrand: { fontSize: 28, fontWeight: '600', letterSpacing: -1, lineHeight: 33 },
   buttonPressed: { opacity: 0.76 },
   largeCoverPane: { bottom: 0, overflow: 'hidden', position: 'absolute', right: 0, top: 0 },
   largeWelcomeContent: {
@@ -181,7 +181,7 @@ const styles = StyleSheet.create({
     width: '50%',
   },
   formFields: { gap: 13 },
-  heroButton: { alignItems: 'center', borderRadius: 28, flexDirection: 'row', gap: 12, justifyContent: 'center', minHeight: 56, paddingHorizontal: 22 },
+  heroButton: { alignItems: 'center', borderCurve: 'continuous', borderRadius: 28, flexDirection: 'row', gap: 12, justifyContent: 'center', minHeight: 56, paddingHorizontal: 22 },
   heroButtonLabel: { fontSize: 17, fontWeight: '600' },
   linkLabel: { fontSize: 15, fontWeight: '600' },
   trailingLink: { alignSelf: 'flex-end', paddingVertical: 3 },

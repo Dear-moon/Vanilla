@@ -20,6 +20,7 @@ export function CommunityPublishNavigation(_props: {
 }
 
 export function CommunityNotificationsNavigation(_props: {
+  disabled: boolean;
   hidden: boolean;
   onMarkAll(): void;
 }) {

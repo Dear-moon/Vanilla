@@ -1115,6 +1115,7 @@ export function ReaderScreen({ bookId, sortNum, openPosition = 'saved' }: Reader
         chromeHidden={chromeHidden}
         direction="ltr"
         pageCurrent={pageProgress.current}
+        pageStepped={mode === 'paged'}
         pageTotal={pageProgress.total}
         onPageProgressChange={jumpToProgress}
         pageProgress={pageProgress.progress}

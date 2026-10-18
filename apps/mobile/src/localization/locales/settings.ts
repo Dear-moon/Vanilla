@@ -202,7 +202,7 @@ export const zhCNSettings = {
     },
   },
   about: {
-    title: '关于 Novella',
+    title: '关于 Vanilla',
     sections: {
       app: '本应用',
       externalLinks: '外部链接',
@@ -682,7 +682,7 @@ export const zhTWSettings: TranslationShape<typeof zhCNSettings> = {
     },
   },
   about: {
-    title: '關於 Novella',
+    title: '關於 Vanilla',
     sections: {
       app: '本應用程式',
       externalLinks: '外部連結',

@@ -34,7 +34,7 @@ export const zhCNAuth = {
     forgotPassword: '忘记密码？',
     submit: '登录',
     submitting: '正在登录…',
-    createAccount: '初次使用 Novella？创建账号',
+    createAccount: '初次使用 Vanilla？创建账号',
     validation: {
       credentialsRequired: '请输入邮箱和密码。',
     },
@@ -132,7 +132,7 @@ export const zhTWAuth: TranslationShape<typeof zhCNAuth> = {
     forgotPassword: '忘記密碼？',
     submit: '登入',
     submitting: '正在登入…',
-    createAccount: '第一次使用 Novella？建立帳號',
+    createAccount: '第一次使用 Vanilla？建立帳號',
     validation: {
       credentialsRequired: '請輸入電子郵件與密碼。',
     },

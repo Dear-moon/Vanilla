@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import { IconX } from '@tabler/icons-react-native';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -10,6 +11,7 @@ import {
   View,
 } from 'react-native';
 
+import { useProfile } from '@/hooks/use-profile';
 import { ProfileAvatar } from '@/components/profile-avatar';
 import { formatDate } from '@/localization/formatters';
 import { useAppLocale } from '@/localization/localization-provider';
@@ -65,6 +67,7 @@ function PublicProfileCard({ avatarUrl, userId, userName, onClose }: PublicProfi
   const locale = useAppLocale();
   const { t } = useTranslation('user');
   const { t: tCommon } = useTranslation('common');
+  const { profile } = useProfile();
   const [summary, setSummary] = useState<PublicUserSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
@@ -150,6 +153,19 @@ function PublicProfileCard({ avatarUrl, userId, userName, onClose }: PublicProfi
               </View>
             </View>
           </View>
+
+          {profile && profile.id !== userId ? (
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => {
+                onClose();
+                router.push({ pathname: '/messages/[peerId]', params: { peerId: String(userId) } });
+              }}
+              style={({ pressed }) => [styles.messageButton, pressed && styles.pressed]}
+            >
+              <Text style={styles.retryLabel}>{t('profile.sendMessage')}</Text>
+            </Pressable>
+          ) : null}
 
           <View style={styles.divider} />
 
@@ -238,6 +254,7 @@ const usePublicProfileStyles = createThemedStyles((colors) => ({
     paddingVertical: 2,
   },
   levelLabel: { color: colors.accent, fontSize: 11, fontWeight: '600' },
+  messageButton: { alignItems: 'center', borderColor: colors.separator, borderRadius: 12, borderWidth: StyleSheet.hairlineWidth, padding: 12 },
   metaRow: { alignItems: 'center', flexDirection: 'row', gap: 8 },
   name: { color: colors.label, fontSize: 17, fontWeight: '700' },
   pressed: { opacity: 0.6 },

@@ -50,3 +50,9 @@ export {
 } from './src/native-light-appearance-scope';
 
 export { decodeWoff2, subsetFont } from './src/native-woff2';
+
+export {
+  NativeDirectMessageComposer,
+  type NativeDirectMessageComposerHandle,
+  type NativeDirectMessageComposerProps,
+} from './src/native-direct-message-composer';

@@ -31,7 +31,7 @@ export const zhCNCommon = {
     reconnectedTitle: '连接已恢复',
     reconnectedMessage: '可以继续阅读了。',
     sessionExpiredTitle: '登录状态已过期',
-    sessionExpiredMessage: '请重新登录后继续使用 Novella。',
+    sessionExpiredMessage: '请重新登录后继续使用 Vanilla。',
   },
   realtime: {
     growthUpdateTitle: '成长更新',
@@ -76,7 +76,7 @@ export const zhTWCommon: TranslationShape<typeof zhCNCommon> = {
     reconnectedTitle: '連線已恢復',
     reconnectedMessage: '可以繼續閱讀了。',
     sessionExpiredTitle: '登入狀態已過期',
-   sessionExpiredMessage: '請重新登入後繼續使用 Novella。',
+   sessionExpiredMessage: '請重新登入後繼續使用 Vanilla。',
  },
   realtime: {
     growthUpdateTitle: '成長更新',

@@ -2,9 +2,9 @@
 // `/releases/latest` never returns pre-releases, so we list the newest release
 // (including pre-releases) to match the fork's release workflow.
 const RELEASES_API_URL =
-  'https://api.github.com/repos/Dear-moon/Novella/releases?per_page=1';
+  'https://api.github.com/repos/Dear-moon/Vanilla/releases?per_page=1';
 
-const RELEASE_URL_PREFIX = '/Dear-moon/Novella/releases/';
+const RELEASE_URL_PREFIX = '/Dear-moon/Vanilla/releases/';
 const VERSION_PATTERN =
   /^[vV]?(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/;
 

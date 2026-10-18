@@ -11,6 +11,7 @@ export interface ReaderProgressSliderProps {
   hidden?: boolean;
   onValueChange: (value: number) => void;
   pageCurrent: number;
+  pageStepped?: boolean;
   pageTotal: number;
   progress: number;
   visible: boolean;
@@ -23,6 +24,7 @@ export function ReaderProgressSlider({
   hidden = false,
   onValueChange,
   pageCurrent,
+  pageStepped = true,
   pageTotal,
   progress,
   visible,
@@ -36,7 +38,7 @@ export function ReaderProgressSlider({
     : '';
   const disabled = pageTotal <= 1;
   const handleProgressChange = (value: number) => {
-    onValueChange(snapReaderProgress(value, pageTotal));
+    onValueChange(pageStepped ? snapReaderProgress(value, pageTotal) : value);
   };
 
   return (
@@ -47,7 +49,7 @@ export function ReaderProgressSlider({
       pageCurrent={pageCurrent}
       pageTotal={pageTotal}
       progress={disabled ? 1 : progress}
-      step={readerProgressStep(pageTotal)}
+      step={pageStepped ? readerProgressStep(pageTotal) : 0}
       remainingText={remainingText}
     />
   );

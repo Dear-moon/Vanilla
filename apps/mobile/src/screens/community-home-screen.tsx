@@ -53,6 +53,8 @@ import type {
 
 import { CommunityHomeNavigation } from '@/components/community/community-navigation';
 import { NativeScreenScaffold } from '@/components/native-screen-scaffold';
+import { useProfile } from '@/hooks/use-profile';
+import { formatUnreadBadge, getUnreadCounts } from '@/services/unread-counts';
 import { useCommunityHome, type CommunityHomeQuery } from '@/hooks/use-community-home';
 import { useAppLocale } from '@/localization/localization-provider';
 import { resolveCommunityBoardIcon } from '@/services/community-board-icons';
@@ -83,6 +85,9 @@ export function CommunityHomeScreen() {
   const styles = useCommunityHomeStyles();
   const { colorScheme, colors } = useAppTheme();
   const { t } = useTranslation('community');
+  const { profile } = useProfile();
+  const unread = getUnreadCounts(profile);
+  const directMessageBadge = formatUnreadBadge(unread.directMessages);
   const paperTheme = colorScheme === 'dark' ? MD3DarkTheme : MD3LightTheme;
   const { loadMore, refresh, retry, state, updateQuery } = useCommunityHome();
 
@@ -113,17 +118,27 @@ export function CommunityHomeScreen() {
           actions={[
             { accessibilityLabel: t('accessibility.newPost'), icon: 'pencil', id: 'compose' },
             {
-              accessibilityLabel: t('accessibility.notifications'),
+              accessibilityLabel: unread.notifications > 0
+                ? `${t('accessibility.notifications')} (${formatUnreadBadge(unread.notifications)})`
+                : t('accessibility.notifications'),
               icon: 'bell',
               id: 'notifications',
             },
             {
-              accessibilityLabel: t('accessibility.menu'),
+              accessibilityLabel: directMessageBadge
+                ? t('accessibility.menuWithUnread', { count: unread.directMessages })
+                : t('accessibility.menu'),
               icon: 'dots',
               id: 'community-menu',
               menuItems: [
                 { icon: 'user', id: 'mine', label: t('navigation.myCommunity') },
                 { icon: 'trophy', id: 'rankings', label: t('navigation.rankings') },
+                {
+                  id: 'messages',
+                  label: directMessageBadge
+                    ? t('navigation.directMessagesWithUnread', { countLabel: directMessageBadge })
+                    : t('navigation.directMessages'),
+                },
               ],
             },
           ]}
@@ -132,6 +147,7 @@ export function CommunityHomeScreen() {
             else if (id === 'notifications') router.push('/notifications');
             else if (id === 'mine') router.push('/mine');
             else if (id === 'rankings') router.push('/community-rankings');
+            else if (id === 'messages') router.push('/messages');
           }}
           title={t('navigation.community')}
         >

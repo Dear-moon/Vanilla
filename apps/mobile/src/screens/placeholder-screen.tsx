@@ -54,6 +54,7 @@ const usePlaceholderScreenStyles = createThemedStyles((colors) => ({
   iconFrame: {
     backgroundColor: colors.card,
     borderColor: colors.separator,
+    borderCurve: 'continuous',
     borderRadius: 24,
     borderWidth: 0.5,
     height: 72,
