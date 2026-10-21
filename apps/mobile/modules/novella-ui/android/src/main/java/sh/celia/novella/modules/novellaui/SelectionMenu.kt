@@ -33,6 +33,7 @@ import expo.modules.ui.ModifierRegistry
 enum class SelectionMenuIcon(val value: String) : Enumerable {
   BOOKS("books"),
   EQUAL("equal"),
+  MESSAGES("messages"),
   SPARKLES("sparkles"),
   TAG("tag"),
   TEXT_SIZE("textSize"),
@@ -44,6 +45,7 @@ enum class SelectionMenuIcon(val value: String) : Enumerable {
     get() = when (this) {
       BOOKS -> R.drawable.ic_tabler_books_24
       EQUAL -> R.drawable.ic_tabler_equal_24
+      MESSAGES -> R.drawable.ic_tabler_messages_24
       SPARKLES -> R.drawable.ic_tabler_sparkles_24
       TAG -> R.drawable.ic_tabler_tag_24
       TEXT_SIZE -> R.drawable.ic_tabler_text_size_24

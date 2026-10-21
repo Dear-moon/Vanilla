@@ -691,15 +691,14 @@ function BookPrimaryActions({
             onPress={() => void onToggleShelf()}
             size="icon"
             spinnerProps={{ color: shelfIconColor }}
-            style={styles.shelfButton}
-            variant="ghost"
-          >
-            {isInShelf ? (
+            startContent={isInShelf ? (
               <IconBookmarkFilled color={shelfIconColor} size={25} />
             ) : (
               <IconBookmark color={shelfIconColor} size={25} strokeWidth={2} />
             )}
-          </Button>
+            style={styles.shelfButton}
+            variant="ghost"
+          />
         </BackdropGlass>
 
         <BackdropGlass
@@ -954,7 +953,7 @@ function InlineBookHero({
 }) {
   const author = book.authorName?.trim() ?? '';
   const height = BOOK_HERO_HEIGHT + topInset;
-  const flexibleBackgroundStyle = useAnimatedStyle(() => ({
+  const heroOpacityStyle = useAnimatedStyle(() => ({
     opacity: interpolate(
       scrollOffset.value,
       [
@@ -965,19 +964,11 @@ function InlineBookHero({
       [1, 1, 0],
       'clamp',
     ),
-    transform: [{
-      translateY: interpolate(
-        scrollOffset.value,
-        [0, BOOK_HERO_COLLAPSE_DISTANCE],
-        [0, BOOK_HERO_COLLAPSE_DISTANCE * 0.75],
-        'clamp',
-      ),
-    }],
   }));
 
   return (
     <View style={[styles.inlineHeroClip, { height }]}>
-      <Animated.View style={[StyleSheet.absoluteFill, flexibleBackgroundStyle]}>
+      <Animated.View style={[StyleSheet.absoluteFill, heroOpacityStyle]}>
         <BookHeroContent
           author={author}
           book={book}

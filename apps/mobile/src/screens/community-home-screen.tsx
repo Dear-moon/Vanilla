@@ -94,7 +94,7 @@ export function CommunityHomeScreen() {
     { accessibilityLabel: t('accessibility.menu'), icon: 'dots', id: 'menu', menuItems: [
       { id: 'mine', label: t('navigation.myCommunity'), icon: 'user' },
       { id: 'rankings', label: t('navigation.rankings'), icon: 'trophy' },
-      { id: 'messages', label: `${t('navigation.directMessages')}${formatUnreadBadge(unread.directMessages) ? ` (${formatUnreadBadge(unread.directMessages)})` : ''}` },
+      { id: 'messages', icon: 'messages', label: `${t('navigation.directMessages')}${formatUnreadBadge(unread.directMessages) ? ` (${formatUnreadBadge(unread.directMessages)})` : ''}` },
     ] },
   ];
   const scaffold = (children: ReactNode) => (

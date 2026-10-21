@@ -25,6 +25,7 @@ import {
   BookCoverGridItem,
 } from '@/components/book-cover-grid-item';
 import { DiscoverNavigation } from '@/components/discover-navigation';
+import { HorizontalSafeArea } from '@/components/horizontal-safe-area';
 import { NativeScreenScaffold } from '@/components/native-screen-scaffold';
 import { SectionCard } from '@/components/section-card';
 import {
@@ -79,9 +80,10 @@ export function HomeScreen() {
         }}
         title={t('discovery.title')}
       >
+        <HorizontalSafeArea style={styles.scroll}>
         <ScrollView
           contentInsetAdjustmentBehavior="automatic"
-          contentContainerStyle={styles.content}
+          contentContainerStyle={[styles.content, { paddingHorizontal: pageMargin }]}
           nestedScrollEnabled
           onLayout={coverViewport.onLayout}
           onScroll={coverViewport.onScroll}
@@ -111,6 +113,7 @@ export function HomeScreen() {
           <ComicsSection viewport={coverViewport} />
           <OnlineInfoSection onRetry={retryOnlineInfo} state={onlineInfo} />
         </ScrollView>
+        </HorizontalSafeArea>
       </NativeScreenScaffold>
       <DiscoverNavigation />
     </>

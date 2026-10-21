@@ -399,7 +399,7 @@ export function ShelfScreen({
           <HorizontalSafeArea style={styles.scrollView}>
           <ScrollView
             contentInsetAdjustmentBehavior="automatic"
-            contentContainerStyle={styles.content}
+            contentContainerStyle={[styles.content, { paddingHorizontal: pageMargin }]}
             nestedScrollEnabled
             onLayout={(event) => {
               viewportHeightRef.current = event.nativeEvent.layout.height;

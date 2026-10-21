@@ -6,6 +6,7 @@ export type NativeSelectionMenuIcon =
   | 'books'
   | 'dots'
   | 'equal'
+  | 'messages'
   | 'sparkles'
   | 'tag'
   | 'textSize'
