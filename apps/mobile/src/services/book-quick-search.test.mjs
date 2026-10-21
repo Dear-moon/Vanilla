@@ -2,7 +2,6 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
-  BOOK_SEARCH_ROUTE,
   decodeSeriesSearchMode,
   hasSearchableQuickSearchTags,
   isJapaneseOriginalCategory,
@@ -11,6 +10,7 @@ import {
   resolveSeriesSearchKeyword,
   resolveTagQuickSearch,
   toBookSearchRouteParams,
+  BOOK_SEARCH_ROUTE,
 } from './book-quick-search.ts';
 
 const category = (name = '', shortName = '') => ({ color: '', name, shortName });
@@ -125,6 +125,13 @@ test('tag quick search trims and rejects empty tags', () => {
   assert.deepEqual(normalizeQuickSearchTags([' tag ', 'tag', '  ', 'other']), ['tag', 'other']);
   assert.equal(hasSearchableQuickSearchTags(['  ', '\n']), false);
   assert.equal(hasSearchableQuickSearchTags(['  tag  ']), true);
+});
+
+test('quick search route params preserve target mode and detail format', () => {
+  assert.deepEqual(
+    toBookSearchRouteParams({ mode: 'author', query: 'Author' }, 'Comic'),
+    { format: 'Comic', mode: 'author', query: 'Author' },
+  );
 });
 
 test('quick search uses a root route and preserves target mode and detail format', () => {

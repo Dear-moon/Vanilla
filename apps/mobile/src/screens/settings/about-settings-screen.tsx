@@ -9,6 +9,7 @@ import { NativeToggleRow, NativeValueRow } from '@/components/native-setting-con
 import { runManualAppUpdateCheck } from '@/services/app-update-alerts';
 import { updateAppSettings, useAppSettings } from '@/services/settings';
 
+const upstreamRepositoryUrl = 'https://github.com/celia-sh/Novella';
 const repositoryUrl = 'https://github.com/Dear-moon/Vanilla';
 const novellaUrl = 'https://novella.celia.sh';
 const lightNovelShelfUrl = 'https://www.lightnovel.app';
@@ -72,6 +73,22 @@ export function AboutSettingsScreen() {
           icon="changelogs"
           onPress={() => void Linking.openURL(`${repositoryUrl}/releases`)}
           title={t('about.changelogsTitle')}
+        />
+      </NativeGroupedListSection>
+      <NativeGroupedListSection title={t('about.sections.legal')}>
+        <NativeGroupedListRow
+          description={upstreamRepositoryUrl}
+          icon="sourceCode"
+          onPress={() => void Linking.openURL(upstreamRepositoryUrl)}
+          title="Based on Novella by Kanscape"
+        />
+      </NativeGroupedListSection>
+      <NativeGroupedListSection title={t('about.whatsNewTitle')}>
+        <NativeGroupedListRow
+          description={t('about.whatsNewDescription')}
+          icon="changelogs"
+          onPress={() => router.push({ pathname: '/whats-new', params: { source: 'about' } })}
+          title={t('about.whatsNewTitle')}
         />
       </NativeGroupedListSection>
       <NativeGroupedListSection title={t('about.sections.externalLinks')}>

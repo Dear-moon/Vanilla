@@ -41,7 +41,7 @@ export function NativeScreenScaffold({
         showBackButton={showBackButton}
         title={title}
       >
-        <RNHostView modifiers={[fillMaxSize()]} style={StyleSheet.absoluteFill}>
+        <RNHostView modifiers={[fillMaxSize()]}>
           <View style={StyleSheet.absoluteFill}>{children}</View>
         </RNHostView>
       </NativeTopAppBarScaffold>

@@ -35,8 +35,8 @@ export function ReaderChapterList({ emptyState, header, items, onSelect, palette
         <View style={[styles.separator, { backgroundColor: palette.outlineVariant }]} />
       )}
       keyExtractor={(item) => String(item.id)}
-      ListEmptyComponent={emptyState ?? null}
-      ListHeaderComponent={header ?? null}
+      ListEmptyComponent={emptyState ?? undefined}
+      ListHeaderComponent={header ?? undefined}
       // Inside the Android Compose bottom sheet the RN list must participate
       // in the nested scrolling coordinator (same handling as the book
       // introduction sheet).

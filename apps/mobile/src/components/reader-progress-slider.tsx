@@ -7,6 +7,11 @@ import {
 } from '@/services/reader-page-progress';
 
 export interface ReaderProgressSliderProps {
+  columnCount?: number;
+  columnTotal?: number;
+  disabled?: boolean;
+  displayMode?: 'pages' | 'percentage';
+  layoutWidth?: number;
   direction?: 'ltr' | 'rtl';
   hidden?: boolean;
   onValueChange: (value: number) => void;
@@ -21,6 +26,7 @@ export const READER_PROGRESS_BAR_HEIGHT = 40;
 
 export function ReaderProgressSlider({
   direction = 'ltr',
+  disabled: progressDisabled = false,
   hidden = false,
   onValueChange,
   pageCurrent,
@@ -36,7 +42,7 @@ export function ReaderProgressSlider({
   const remainingText = pagesRemaining > 0
     ? t('progress.remainingPages', { count: pagesRemaining })
     : '';
-  const disabled = pageTotal <= 1;
+  const disabled = progressDisabled || pageTotal <= 1;
   const handleProgressChange = (value: number) => {
     onValueChange(pageStepped ? snapReaderProgress(value, pageTotal) : value);
   };

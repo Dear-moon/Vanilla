@@ -79,7 +79,7 @@ import {
   resolveReaderReflowOpenPosition,
   resolveReaderScrollRestoreOffset,
 } from '@/services/reader-reflow-position';
-import { updateAppSettings, useAppSettings } from '@/services/settings';
+import { readerImagePreviewIncludes, updateAppSettings, useAppSettings } from '@/services/settings';
 import { useReaderLifecycleSave } from '@/hooks/use-reader-lifecycle-save';
 import { useAppColorScheme, useAppTheme } from '@/theme/app-theme';
 import {
@@ -103,6 +103,7 @@ export function ReaderScreen({ bookId, sortNum, openPosition = 'saved' }: Reader
   const { t } = useTranslation('reader');
   const insets = useSafeAreaInsets();
   const settings = useAppSettings();
+  const novelImagePreviewEnabled = readerImagePreviewIncludes(settings.readerImagePreviewScope, 'novel');
   const navigation = useNavigation<{
     setParams(params: { position: ReaderOpenPosition; sortNum: string }): void;
   }>();
@@ -939,8 +940,8 @@ export function ReaderScreen({ bookId, sortNum, openPosition = 'saved' }: Reader
       fontMgr={fontMgr}
       generation={layoutGeneration}
       imageAccessibilityLabel={t('images.illustration')}
-      onOpenImage={openImagePreview}
-      openImageOnLongPress={settings.readerImagePreviewOpenOnLongPress}
+      {...(novelImagePreviewEnabled ? { onOpenImage: openImagePreview } : {})}
+      openImageOnLongPress
       theme={{
         backgroundColor: readerBackground,
         textColor: readerTextColor,
@@ -967,7 +968,7 @@ export function ReaderScreen({ bookId, sortNum, openPosition = 'saved' }: Reader
     readerChromeInsets,
     readerTextColor,
     screenWidth,
-    settings.readerImagePreviewOpenOnLongPress,
+    novelImagePreviewEnabled,
     t,
   ]);
 
@@ -1063,14 +1064,14 @@ export function ReaderScreen({ bookId, sortNum, openPosition = 'saved' }: Reader
                 imagePool={imagePool}
                 layout={layout!}
                 onMomentumScrollEnd={handleScrollEnd}
-                onOpenImage={openImagePreview}
+                {...(novelImagePreviewEnabled ? { onOpenImage: openImagePreview } : {})}
                 onViewportChanged={handleViewportChanged}
                 onScrollEndDrag={handleScrollEndDrag}
                 onTouchCancel={onTouchCancel}
                 onTouchEnd={onTouchEnd}
                 onTouchMove={onTouchMove}
                 onTouchStart={onTouchStart}
-                openImageOnLongPress={settings.readerImagePreviewOpenOnLongPress}
+                openImageOnLongPress
                 scrollViewRef={scrollViewRef}
                 theme={{
                   backgroundColor: readerBackground,

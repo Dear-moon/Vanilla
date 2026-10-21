@@ -7,7 +7,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.DropdownMenuGroup
-import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.SelectableDropdownMenuItem
 import androidx.compose.material3.DropdownMenuPopup
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
@@ -174,7 +174,7 @@ fun SelectionDropdownMenu(
   ) {
     DropdownMenuGroup(shapes = MenuDefaults.groupShape(index = 0, count = 1)) {
       entries.forEachIndexed { index, entry ->
-        DropdownMenuItem(
+        SelectableDropdownMenuItem(
           selected = entry.selected,
           onClick = { onSelected(entry) },
           text = { Text(entry.label) },
@@ -187,7 +187,7 @@ fun SelectionDropdownMenu(
             }
           },
           shapes = MenuDefaults.itemShape(index, entries.size),
-          trailingIcon = if (entry.selected) {
+          trailingContent = if (entry.selected) {
             {
               Icon(
                 contentDescription = null,

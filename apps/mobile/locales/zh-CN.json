@@ -1,7 +1,8 @@
 {
   "ios": {
     "CFBundleDisplayName": "Vanilla",
-    "NSPhotoLibraryAddUsageDescription": "允许 Vanilla 将图片保存到你的照片图库。"
+    "NSPhotoLibraryAddUsageDescription": "允许 Vanilla 将图片保存到你的照片图库。",
+    "NSPhotoLibraryUsageDescription": "允许 Vanilla 从你的照片图库选择图片插入社区帖子。"
   },
   "android": {
     "app_name": "Vanilla"

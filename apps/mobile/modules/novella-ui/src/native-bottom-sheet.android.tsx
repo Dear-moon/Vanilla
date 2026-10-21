@@ -1,4 +1,5 @@
 import { Host, RNHostView } from '@expo/ui/jetpack-compose';
+import { width as composeWidth } from '@expo/ui/jetpack-compose/modifiers';
 import type { ViewEvent } from '@expo/ui/jetpack-compose';
 import { requireNativeView } from 'expo';
 import { StyleSheet, View, useWindowDimensions } from 'react-native';
@@ -33,7 +34,7 @@ export function NativeBottomSheet({
             when partial sheets translate or resize their RN content. */}
         <RNHostView
           matchContents={fitToContents}
-          style={fitToContents ? { width: contentWidth } : undefined}
+          modifiers={fitToContents ? [composeWidth(contentWidth)] : []}
         >
           <View
             style={fitToContents ? [styles.fitContent, { width: contentWidth }] : styles.fill}

@@ -19,13 +19,15 @@ import type {
 import { comicToBookListItem } from '@novella/api-client';
 
 import { BookCoverGridItem } from '@/components/book-cover-grid-item';
+import { HorizontalSafeArea } from '@/components/horizontal-safe-area';
 import {
   BookCoverSkeletonTile,
   bookGridLoadingMoreKeys,
   bookGridSkeletonCount,
   skeletonKeys,
 } from '@/components/book-grid-skeleton';
-import { useBookGridLayout } from '@/hooks/use-book-grid-layout';
+import { ReflowFade } from '@/components/reflow-fade';
+import { BOOK_GRID_COLUMN_GAP, BOOK_GRID_ROW_GAP, useBookGridLayout } from '@/hooks/use-book-grid-layout';
 import { useFlatListCoverActivation } from '@/hooks/use-cover-activation';
 import type { LibraryMessage } from '@/localization/locales/library';
 import {
@@ -33,7 +35,6 @@ import {
 } from '@/components/native-search-controls';
 import {
   BOOK_SEARCH_MODE_OPTIONS,
-  type NativeSearchControlsHandle,
 } from '@/components/native-search-controls.types';
 import { NativeScreenScaffold } from '@/components/native-screen-scaffold';
 import { useBookSearch, type BookSearchFormat } from '@/hooks/use-book-search';
@@ -60,7 +61,6 @@ export function BookSearchScreen({
   const styles = useBookSearchScreenStyles();
   const { colors } = useAppTheme();
   const search = useBookSearch();
-  const searchControlsRef = useRef<NativeSearchControlsHandle>(null);
   const [query, setQuery] = useState(initialQuery);
   const submittedInitial = useRef(false);
   const initialQueryValue = initialQuery.trim();
@@ -69,7 +69,7 @@ export function BookSearchScreen({
   const initialSearchPending =
     initialQueryValue !== '' && search.status === 'idle' && search.committedQuery === '';
   const visibleStatus = initialSearchPending ? 'loading' : search.status;
-  const { columns, contentWidth, height, listKey, tileWidth } = useBookGridLayout(16);
+  const { pageMargin, columns, contentWidth, height, listKey, tileWidth } = useBookGridLayout();
   const results = useMemo<SearchResult[]>(() => search.format === 'Novel'
     ? search.novels.map((item) => ({ key: `Novel:${item.id}`, kind: 'Novel', item }))
     : search.comics.map((item) => ({ key: `Comic:${item.title}`, kind: 'Comic', item })),
@@ -145,7 +145,6 @@ export function BookSearchScreen({
         ListHeaderComponent={
           <View style={styles.header}>
             <NativeSearchControls
-              ref={searchControlsRef}
               format={search.format}
               mode={search.mode}
               onFormatChange={search.changeFormat}
@@ -156,6 +155,7 @@ export function BookSearchScreen({
                 Keyboard.dismiss();
                 void search.submit(value);
               }}
+              pushed={showBackButton}
               query={query}
             />
             {visibleStatus === 'idle' && search.history.length > 0 ? (
@@ -175,7 +175,6 @@ export function BookSearchScreen({
                       onLongPress={() => void search.removeHistory(item)}
                       onPress={() => {
                         setQuery(item);
-                        searchControlsRef.current?.setQuery(item);
                         void search.submit(item);
                       }}
                       style={styles.historyChip}
@@ -189,7 +188,7 @@ export function BookSearchScreen({
           </View>
         }
         columnWrapperStyle={styles.row}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[styles.content, { paddingHorizontal: pageMargin }]}
         contentInsetAdjustmentBehavior="automatic"
         data={data}
         extraData={coverActivation.activatedKeys}
@@ -316,11 +315,14 @@ function SearchEmpty({
 }
 
 const useBookSearchScreenStyles = createThemedStyles((colors) => ({
-  content: { gap: 14, paddingBottom: 100, paddingHorizontal: 16 },
+  content: { gap: BOOK_GRID_ROW_GAP, paddingBottom: 100 },
+  root: { flex: 1 },
   empty: { alignItems: 'center', gap: 10, paddingHorizontal: 28, paddingVertical: 56 },
   emptyText: { color: colors.secondaryLabel, fontSize: 14, lineHeight: 20, textAlign: 'center' },
   emptyTitle: { color: colors.label, fontSize: 17, fontWeight: '700' },
-  header: { gap: 14, paddingTop: 8 },
+  // The native search bar already pads its field about 10pt inside its frame,
+  // which stands in for the shared gap under the large title.
+  header: { gap: 14 },
   historyChip: { backgroundColor: colors.card, borderCurve: 'continuous', borderRadius: 10, maxWidth: '100%', paddingHorizontal: 12, paddingVertical: 8 },
   historyHeader: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between' },
   historyLabel: { color: colors.label, fontSize: 14 },
@@ -328,6 +330,6 @@ const useBookSearchScreenStyles = createThemedStyles((colors) => ({
   historyWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   retryButton: { backgroundColor: colors.accent, borderCurve: 'continuous', borderRadius: 10, paddingHorizontal: 16, paddingVertical: 10 },
   retryLabel: { color: colors.onPrimaryContainer, fontWeight: '700' },
-  row: { gap: 10 },
+  row: { gap: BOOK_GRID_COLUMN_GAP },
   sectionTitle: { color: colors.label, fontSize: 16, fontWeight: '700' },
 }));

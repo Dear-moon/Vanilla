@@ -1,6 +1,6 @@
 import { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, StyleSheet, Text, TextInput, View, type TextInputInstance } from 'react-native';
 import { KeyboardStickyView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -22,12 +22,13 @@ export const NativeDirectMessageComposer = forwardRef<
   { accentColor, draft = '', enabled = true, maxLength, onDraftChange, onHeightChange, onSend, placeholder },
   ref,
 ) {
-  const inputRef = useRef<TextInput>(null);
+  const inputRef = useRef<TextInputInstance>(null);
   const { bottom } = useSafeAreaInsets();
   const { colors } = useAppTheme();
   const styles = useComposerStyles();
   const { t } = useTranslation('messages');
   const [inputHeight, setInputHeight] = useState(40);
+  const [value, setValue] = useState(draft);
 
   useImperativeHandle(ref, () => ({
     async blur() { inputRef.current?.blur(); },
@@ -47,7 +48,7 @@ export const NativeDirectMessageComposer = forwardRef<
             editable={enabled}
             maxLength={maxLength}
             multiline
-            onChangeText={onDraftChange}
+            onChangeText={(text) => { setValue(text); onDraftChange?.(text); }}
             onContentSizeChange={(event) => setInputHeight(
               Math.min(144, Math.max(40, event.nativeEvent.contentSize.height)),
             )}
@@ -56,16 +57,16 @@ export const NativeDirectMessageComposer = forwardRef<
             selectionColor={accentColor ?? colors.accent}
             style={[styles.input, { height: inputHeight }]}
             textAlignVertical="top"
-            value={draft}
+            value={value}
           />
           <Pressable
             accessibilityLabel={t('composer.send')}
             accessibilityRole="button"
-            disabled={!enabled || !draft.trim()}
-            onPress={() => onSend?.(draft)}
+            disabled={!enabled || !value.trim()}
+            onPress={() => { onSend?.(value); setValue(''); setInputHeight(40); }}
             style={({ pressed }) => [
               styles.send,
-              (!enabled || !draft.trim() || pressed) && styles.dimmed,
+              (!enabled || !value.trim() || pressed) && styles.dimmed,
             ]}
           >
             <Text style={[styles.sendLabel, { color: accentColor ?? colors.accent }]}>

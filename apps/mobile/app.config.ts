@@ -8,7 +8,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   slug: 'novella',
   // CI 通过 v* tag 注入 APP_VERSION；本地开发回退到 package.json 版本。
   version: process.env.APP_VERSION || config.version || '2.0.0',
-  orientation: 'portrait',
+  orientation: 'default',
   platforms: ['android', 'ios'],
   scheme: 'novella',
   userInterfaceStyle: 'automatic',
@@ -59,7 +59,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         ios: {
           // ccache 加速 iOS 原生 C++ 编译（CI 缓存 ~/Library/Caches/ccache）。
           ccacheEnabled: true,
-          // SDK 57 默认值，显式固定防止漂移。
+          // Keep precompiled native modules enabled for faster iOS builds.
           usePrecompiledModules: true,
           buildReactNativeFromSource: false,
           extraPods: [
@@ -93,6 +93,11 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       savePhotosPermission: '允许 Vanilla 将图片保存到你的照片图库。',
     }],
     'expo-sharing',
+    ['expo-image-picker', {
+      cameraPermission: false,
+      microphonePermission: false,
+      photosPermission: '允许 Vanilla 从你的照片图库选择图片插入社区帖子。',
+    }],
   ],
   extra: {
     // 运行时经 Constants.expoConfig.extra 读取，设置页展示构建渠道与标签。

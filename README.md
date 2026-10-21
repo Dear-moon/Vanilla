@@ -2,7 +2,11 @@
   <img src="assets/banner.png" alt="Novella banner" width="100%">
 </p>
 
-# 📚 Novella
+# 📚 Vanilla
+
+Based on Novella by Kanscape — https://github.com/celia-sh/Novella
+
+Android port of upstream `eb8b623` (2.6.0).
 
 <a href="https://trendshift.io/repositories/22931?utm_source=repository-badge&amp;utm_medium=badge&amp;utm_campaign=badge-repository-22931" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/repositories/22931" alt="celia-sh%2FNovella | Trendshift" width="250" height="55"/></a>
 

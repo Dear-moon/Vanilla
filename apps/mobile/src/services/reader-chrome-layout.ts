@@ -19,6 +19,8 @@ const TOOLBAR_HEIGHT = {
   ios: { bottom: 44, top: 44 },
 } as const;
 
+const SIDE_CHROME_CONTENT_GAP = 8;
+
 export function resolveReaderChapterBarOrder(
   direction: ReaderChapterBarDirection,
 ): ReaderChapterBarOrder {
@@ -38,4 +40,13 @@ export function createReaderChromeInsets(
     bottom: Math.max(0, safeAreaBottom) + toolbar.bottom + CHROME_CONTENT_GAP,
     top: Math.max(0, safeAreaTop) + toolbar.top + CHROME_CONTENT_GAP,
   };
+}
+
+// Insets for the vertical-bar layout.
+export function createReaderSideChromeInsets(
+  safeAreaTop: number,
+  safeAreaBottom: number,
+): ReaderChromeInsets {
+  const inset = Math.max(0, safeAreaTop, safeAreaBottom) + SIDE_CHROME_CONTENT_GAP;
+  return { bottom: inset, top: inset };
 }

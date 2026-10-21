@@ -12,6 +12,7 @@ export function ReaderChapterNavigation({
   pageProgress,
   pageStepped = true,
   pageTotal,
+  progressDisabled = false,
 }: ReaderChapterNavigationProps) {
   if (chromeHidden || pageTotal === 0) return null;
   return (
@@ -22,6 +23,7 @@ export function ReaderChapterNavigation({
       <Stack.Toolbar.View>
         <ReaderProgressSlider
           direction={direction}
+          disabled={progressDisabled}
           onValueChange={onPageProgressChange}
           pageCurrent={pageCurrent}
           pageStepped={pageStepped}

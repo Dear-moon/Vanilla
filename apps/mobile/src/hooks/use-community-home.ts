@@ -12,6 +12,7 @@ import type {
 import { community } from '@/services/client';
 import { mergeCommunityItems } from '@/services/community-utils';
 import { setCachedCommunityHome } from '@/hooks/community-home-cache';
+import { getSnapshot as getAppSettings, updateAppSettings } from '@/services/settings';
 
 export interface CommunityHomeQuery {
   boardKey: string;
@@ -33,16 +34,19 @@ export interface CommunityHomeState {
   refreshing: boolean;
 }
 
-const INITIAL_QUERY: CommunityHomeQuery = {
-  boardKey: 'all',
-  order: 'reply',
-  scope: 'all',
-  subCategoryKey: '',
-};
+// Sort order is remembered across launches; board, category and time range start fresh.
+function initialQuery(): CommunityHomeQuery {
+  return {
+    boardKey: 'all',
+    order: getAppSettings().communityFeedOrder,
+    scope: 'all',
+    subCategoryKey: '',
+  };
+}
 
 export function useCommunityHome() {
   const { t } = useTranslation('community');
-  const [state, setState] = useState<CommunityHomeState>({
+  const [state, setState] = useState<CommunityHomeState>(() => ({
     categoriesLoading: false,
     error: null,
     feed: [],
@@ -50,13 +54,13 @@ export function useCommunityHome() {
     loadMoreError: null,
     loading: true,
     loadingMore: false,
-    query: INITIAL_QUERY,
+    query: initialQuery(),
     refreshing: false,
-  });
+  }));
   const controllerRef = useRef<AbortController | null>(null);
   const generationRef = useRef(0);
   const loadingMoreRef = useRef(false);
-  const queryRef = useRef(INITIAL_QUERY);
+  const queryRef = useRef(state.query);
   queryRef.current = state.query;
 
   const loadHome = useCallback(async (refreshing = false) => {
@@ -163,25 +167,28 @@ export function useCommunityHome() {
   }, [queryKey, state.home, state.query, t]);
 
   const updateQuery = useCallback((patch: Partial<CommunityHomeQuery>) => {
-    const boardChanged = patch.boardKey !== undefined;
-    setState((current) => ({
-      ...current,
-      query: {
-        ...current.query,
-        ...patch,
-        ...(boardChanged ? { subCategoryKey: '' } : {}),
-      },
-      // A board switch refetches its sub-categories: drop the old ones so
-      // the Category row shows a placeholder instead of stale pills, then
-      // let the fetch fill them back in. "All boards" has no categories, so
-      // it collapses immediately (placeholder off, pills cleared).
-      ...(boardChanged && current.home
-        ? {
-            categoriesLoading: patch.boardKey !== 'all',
-            home: { ...current.home, subCategories: [] },
-          }
-        : {}),
-    }));
+    if (patch.order !== undefined) {
+      void updateAppSettings({ communityFeedOrder: patch.order }).catch(() => undefined);
+    }
+    setState((current) => {
+      // Tapping the board that is already selected is not a switch.
+      const boardChanged = patch.boardKey !== undefined
+        && patch.boardKey !== current.query.boardKey;
+      return {
+        ...current,
+        query: {
+          ...current.query,
+          ...patch,
+          ...(boardChanged ? { subCategoryKey: '' } : {}),
+        },
+        ...(boardChanged && current.home
+          ? {
+              categoriesLoading: patch.boardKey !== 'all',
+              home: { ...current.home, subCategories: [] },
+            }
+          : {}),
+      };
+    });
   }, []);
 
   const loadMore = useCallback(async () => {

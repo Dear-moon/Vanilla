@@ -22,7 +22,8 @@ import {
 } from '@/components/book-grid-skeleton';
 import { NativeScreenScaffold } from '@/components/native-screen-scaffold';
 import { NativeSegmentedControl } from '@/components/native-segmented-control';
-import { useBookGridLayout } from '@/hooks/use-book-grid-layout';
+import { ReflowFade } from '@/components/reflow-fade';
+import { BOOK_GRID_COLUMN_GAP, BOOK_GRID_ROW_GAP, useBookGridLayout } from '@/hooks/use-book-grid-layout';
 import { useFlatListCoverActivation } from '@/hooks/use-cover-activation';
 import type { LibraryMessage } from '@/localization/locales/library';
 import { useComicListPage } from '@/hooks/use-comic-list';
@@ -42,7 +43,7 @@ export function ComicListScreen() {
     retry,
     status,
   } = useComicListPage('latest');
-  const { columns, contentWidth, height, listKey, tileWidth } = useBookGridLayout(20);
+  const { pageMargin, columns, contentWidth, height, listKey, tileWidth } = useBookGridLayout();
   const skeletonCount =
     status === 'loading' && books.length === 0
       ? bookGridSkeletonCount({ columns, headerOffset: 110, height, tileWidth })
@@ -77,7 +78,7 @@ export function ComicListScreen() {
         title={t('catalog.allComics')}
       >
         <FlatList
-          style={styles.root}
+          style={styles.list}
           ListEmptyComponent={
             error ? (
               <ErrorState error={error} onRetry={retry} />
@@ -95,7 +96,7 @@ export function ComicListScreen() {
             </View>
           }
           columnWrapperStyle={styles.row}
-          contentContainerStyle={styles.content}
+          contentContainerStyle={[styles.content, { paddingHorizontal: pageMargin }]}
           contentInsetAdjustmentBehavior="automatic"
           data={data}
           extraData={coverActivation.activatedKeys}
@@ -195,9 +196,8 @@ function ErrorState({ error, onRetry }: { error: LibraryMessage; onRetry(): void
 
 const useComicListScreenStyles = createThemedStyles((colors) => ({
   content: {
-    gap: 12,
+    gap: BOOK_GRID_ROW_GAP,
     paddingBottom: 40,
-    paddingHorizontal: 20,
   },
   emptyDescription: {
     color: colors.secondaryLabel,
@@ -248,6 +248,7 @@ const useComicListScreenStyles = createThemedStyles((colors) => ({
     fontSize: 15,
     fontWeight: '600',
   },
+  list: { flex: 1 },
   root: {
     backgroundColor: colors.background,
     flex: 1,
@@ -255,7 +256,6 @@ const useComicListScreenStyles = createThemedStyles((colors) => ({
   row: {
     alignItems: 'flex-start',
     flexDirection: 'row',
-    gap: 10,
-    justifyContent: 'space-between',
+    gap: BOOK_GRID_COLUMN_GAP,
   },
 }));

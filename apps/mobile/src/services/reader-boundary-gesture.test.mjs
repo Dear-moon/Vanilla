@@ -2,9 +2,9 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
-  resolveReaderBoundaryAxis,
   resolveReaderBoundaryChapterAction,
   resolveReaderPagedBoundaryChapterAction,
+  resolveReaderBoundaryAxis,
 } from './reader-boundary-gesture.ts';
 
 test('boundary gestures require an outward release at the chapter edge', () => {

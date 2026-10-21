@@ -27,21 +27,6 @@ test('resolves parser-facing colors without leaking platform color objects', () 
   );
 });
 
-test('maps the app palette to PanelUI semantic tokens', () => {
-  const variables = createPanelUIThemeVariables(palette, 'dark');
-
-  assert.equal(variables['--color-background'], palette.background);
-  assert.equal(variables['--color-surface'], palette.surface);
-  assert.equal(variables['--color-surface-secondary'], palette.card);
-  assert.equal(variables['--color-surface-tertiary'], palette.surfaceContainerHighest);
-  assert.equal(variables['--color-foreground'], palette.label);
-  assert.equal(variables['--color-muted-foreground'], palette.secondaryLabel);
-  assert.equal(variables['--color-border'], palette.separator);
-  assert.equal(variables['--color-card'], palette.card);
-  assert.equal(variables['--color-accent'], palette.primaryContainer);
-  assert.equal(variables['--color-accent-foreground'], palette.onPrimaryContainer);
-});
-
 test('chooses readable button and destructive foregrounds', () => {
   const variables = createPanelUIThemeVariables(palette, 'light');
 
@@ -61,4 +46,19 @@ test('uses scheme-specific fallbacks for opaque platform colors', () => {
   assert.equal(variables['--color-primary'], '#FF8A9A');
   assert.equal(variables['--color-background'], '#111318');
   assert.equal(variables['--color-foreground'], '#E2E2E9');
+});
+
+test('maps the app palette to PanelUI semantic tokens', () => {
+  const variables = createPanelUIThemeVariables(palette, 'dark');
+
+  assert.equal(variables['--color-background'], palette.background);
+  assert.equal(variables['--color-surface'], palette.surface);
+  assert.equal(variables['--color-surface-secondary'], palette.card);
+  assert.equal(variables['--color-surface-tertiary'], palette.surfaceContainerHighest);
+  assert.equal(variables['--color-foreground'], palette.label);
+  assert.equal(variables['--color-muted-foreground'], palette.secondaryLabel);
+  assert.equal(variables['--color-border'], palette.separator);
+  assert.equal(variables['--color-card'], palette.card);
+  assert.equal(variables['--color-accent'], palette.primaryContainer);
+  assert.equal(variables['--color-accent-foreground'], palette.onPrimaryContainer);
 });

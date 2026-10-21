@@ -1,5 +1,7 @@
 export const BOOK_GRID_COLUMN_GAP = 10;
 export const BOOK_GRID_ROW_GAP = 12;
+// Fixed height of the title under every grid tile (two 16pt lines plus breathing room), so one- and two-line titles keep rows the same height.
+export const BOOK_GRID_TITLE_HEIGHT = 40;
 export const HOME_BOOK_GRID_PREVIEW_ROWS = 2;
 export const HOME_BOOK_METADATA_PAGE_SIZE = 24;
 
@@ -39,9 +41,11 @@ export function homeBookGridPreviewCount(columns: number): number {
   return Math.max(0, Math.trunc(columns)) * HOME_BOOK_GRID_PREVIEW_ROWS;
 }
 
-/** Tile width for a given content width and column count. */
-export function bookGridTileWidth(contentWidth: number, columns: number): number {
-  return Math.floor(
-    (contentWidth - (columns - 1) * BOOK_GRID_COLUMN_GAP) / columns,
-  );
+export function bookGridTileWidth(
+  contentWidth: number,
+  columns: number,
+  pixelRatio = 1,
+): number {
+  const width = (contentWidth - (columns - 1) * BOOK_GRID_COLUMN_GAP) / columns;
+  return Math.floor(width * pixelRatio) / pixelRatio;
 }

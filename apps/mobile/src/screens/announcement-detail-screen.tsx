@@ -1,12 +1,11 @@
+import { NativeScreenScaffold } from '@/components/native-screen-scaffold';
 import {
   IconAlertCircle,
   IconMessage,
   IconRefresh,
 } from '@tabler/icons-react-native';
 import { router, Stack, useFocusEffect } from 'expo-router';
-import { Card } from 'panelui-native/components/card';
-import { Skeleton } from 'panelui-native/components/skeleton';
-import { marked } from 'marked';
+import { Skeleton } from '@/components/skeleton';
 import { memo, useCallback, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { AnnouncementDetail } from '@novella/api-client';
@@ -18,20 +17,21 @@ import {
   StyleSheet,
   Text,
   View,
-  useWindowDimensions,
 } from 'react-native';
 
-import { BookHtmlContent } from '@/components/book-html-content';
+import { CommunityHtmlContent } from '@/components/community/community-html-content';
+import { HorizontalSafeArea } from '@/components/horizontal-safe-area';
 import {
+  CommentThreadLoadingFooter,
   CommentThreadSkeleton,
   type CommentReplyTarget,
 } from '@/components/comment-thread-item';
 import { CommentThreadListItem } from '@/components/comment-thread-list-item';
 import type { CommentThreadPalette } from '@/components/comment-thread';
-import { NativeScreenScaffold } from '@/components/native-screen-scaffold';
 import { showAlert } from '@/components/native-alert-dialog';
 import { useAnnouncementDetail } from '@/hooks/use-announcement-detail';
 import { useComments } from '@/hooks/use-comments';
+import { readingColumnWidth, usePageMargin, useWideLayout } from '@/hooks/use-wide-layout';
 import { formatDate } from '@/localization/formatters';
 import { flattenCommentRows, type CommentListRow } from '@/services/comment-list-rows';
 import { useAppLocale } from '@/localization/localization-provider';
@@ -45,64 +45,42 @@ export function AnnouncementDetailScreen({
   id: string;
   source: string;
 }) {
-  if (source === 'app' && id.trim()) {
-    return <AppAnnouncementDetail id={id} />;
-  }
-  const serverId = Number(id);
-  if (source === 'server' && Number.isSafeInteger(serverId) && serverId > 0) {
-    return <SiteAnnouncementDetail id={id} />;
-  }
-  return <InvalidAnnouncementDetail />;
-}
-
-function AppAnnouncementDetail({ id }: { id: string }) {
   const styles = useAnnouncementDetailStyles();
   const { t } = useTranslation('community');
-  const { retry, state } = useAnnouncementDetail('app', id);
-  const html = useMemo(
-    () => state.data?.source === 'app'
-      ? marked.parse(state.data.markdown, { async: false }) as string
-      : '',
-    [state.data],
-  );
-
+  const { usableWidth } = useWideLayout();
+  const serverId = Number(id);
+  if (source === 'server' && Number.isSafeInteger(serverId) && serverId > 0) {
+    return (
+      <NativeScreenScaffold
+        actions={[{ accessibilityLabel: t('accessibility.writeComment'), icon: 'pencil', id: 'comment' }]}
+        onActionPress={() => router.push({ pathname: '/announcement/comment-compose', params: { id } })}
+        onBackPress={() => router.back()}
+        showBackButton
+        title={t('announcements.title')}
+      >
+        <HorizontalSafeArea style={styles.root}>
+          <AnnouncementDetailPane id={id} paneWidth={usableWidth} />
+        </HorizontalSafeArea>
+      </NativeScreenScaffold>
+    );
+  }
   return (
-    <NativeScreenScaffold
-      largeTitle={false}
-      onBackPress={() => router.back()}
-      showBackButton
-      title=""
-    >
-      <>
-        <Stack.Screen options={{ title: '' }} />
-        <ScrollView
-          contentContainerStyle={styles.detailContent}
-          contentInsetAdjustmentBehavior="automatic"
-          nestedScrollEnabled={process.env.EXPO_OS === 'android'}
-          showsVerticalScrollIndicator={false}
-          style={styles.root}
-        >
-          {state.status === 'loading' ? (
-            <AnnouncementDetailSkeleton />
-          ) : state.status === 'error' ? (
-            <DetailError message={state.error} onRetry={retry} />
-          ) : state.data.source !== 'app' ? (
-            <DetailError message={t('announcements.errors.invalid')} onRetry={retry} />
-          ) : (
-            <AnnouncementArticle
-              html={html}
-              publishedAt={state.data.publishedAt}
-              source="app"
-              title={state.data.title}
-            />
-          )}
-        </ScrollView>
-      </>
-    </NativeScreenScaffold>
+    <View style={[styles.root, styles.invalidDetail]}>
+      <DetailError message={t('announcements.errors.invalid')} />
+    </View>
   );
 }
 
-function SiteAnnouncementDetail({ id }: { id: string }) {
+// A site announcement and its comments, laid out in a reading column centred in a pane of `paneWidth`.
+export function AnnouncementDetailPane({
+  embedded = false,
+  id,
+  paneWidth,
+}: {
+  embedded?: boolean;
+  id: string;
+  paneWidth: number;
+}) {
   const { t } = useTranslation('community');
   const { retry, state } = useAnnouncementDetail('server', id);
   const detail = state.status === 'ready' && state.data.source === 'server'
@@ -124,51 +102,38 @@ function SiteAnnouncementDetail({ id }: { id: string }) {
       },
     });
   }, [serverId]);
+  const pageMargin = usePageMargin();
+  const articlePadding = embedded ? 28 : pageMargin;
+  const columnWidth = readingColumnWidth(paneWidth, articlePadding);
+  const sidePadding = Math.max(articlePadding, (paneWidth - columnWidth) / 2);
 
   return (
-    <NativeScreenScaffold
-      {...(detail
-        ? {
-            actions: [{
-              accessibilityLabel: t('accessibility.writeComment'),
-              icon: 'pencil' as const,
-              id: 'compose',
-            }],
-            onActionPress: (actionId: string) => {
-              if (actionId === 'compose') openComposer();
-            },
-          }
-        : {})}
-      largeTitle={false}
-      onBackPress={() => router.back()}
-      showBackButton
-      title=""
-    >
-      <>
-        <Stack.Screen options={{ title: '' }} />
-        {detail && process.env.EXPO_OS === 'ios' ? (
-          <Stack.Toolbar placement="right">
-            <Stack.Toolbar.Button
-              accessibilityLabel={t('accessibility.writeComment')}
-              icon="square.and.pencil"
-              onPress={() => openComposer()}
-            />
-          </Stack.Toolbar>
-        ) : null}
-        {detail ? (
-          <SiteAnnouncementContent
-            detail={detail}
-            onOpenComposer={openComposer}
+    <>
+      {detail ? (
+        <Stack.Toolbar placement="right">
+          <Stack.Toolbar.Button
+            accessibilityLabel={t('accessibility.writeComment')}
+            icon="square.and.pencil"
+            onPress={() => openComposer()}
           />
-        ) : (
-          <SiteAnnouncementStateContent
-            error={state.error}
-            loading={state.status === 'loading'}
-            onRetry={retry}
-          />
-        )}
-      </>
-    </NativeScreenScaffold>
+        </Stack.Toolbar>
+      ) : null}
+      {detail ? (
+        <SiteAnnouncementContent
+          columnWidth={columnWidth}
+          detail={detail}
+          onOpenComposer={openComposer}
+          sidePadding={sidePadding}
+        />
+      ) : (
+        <SiteAnnouncementStateContent
+          error={state.error}
+          loading={state.status === 'loading'}
+          onRetry={retry}
+          sidePadding={sidePadding}
+        />
+      )}
+    </>
   );
 }
 
@@ -176,21 +141,22 @@ function SiteAnnouncementStateContent({
   error,
   loading,
   onRetry,
+  sidePadding,
 }: {
   error: string | null;
   loading: boolean;
   onRetry: () => void;
+  sidePadding: number;
 }) {
   const styles = useAnnouncementDetailStyles();
   const { t } = useTranslation('community');
 
   return (
     <ScrollView
-      contentContainerStyle={styles.detailContent}
+      contentContainerStyle={[styles.content, { paddingHorizontal: sidePadding }]}
       contentInsetAdjustmentBehavior="automatic"
-      nestedScrollEnabled={process.env.EXPO_OS === 'android'}
       showsVerticalScrollIndicator={false}
-      style={styles.root}
+      style={styles.list}
     >
       {loading ? (
         <AnnouncementDetailSkeleton />
@@ -204,32 +170,16 @@ function SiteAnnouncementStateContent({
   );
 }
 
-function InvalidAnnouncementDetail() {
-  const styles = useAnnouncementDetailStyles();
-  const { t } = useTranslation('community');
-  return (
-    <NativeScreenScaffold
-      largeTitle={false}
-      onBackPress={() => router.back()}
-      showBackButton
-      title=""
-    >
-      <>
-        <Stack.Screen options={{ title: '' }} />
-        <View style={styles.invalidDetail}>
-          <DetailError message={t('announcements.errors.invalid')} />
-        </View>
-      </>
-    </NativeScreenScaffold>
-  );
-}
-
 function SiteAnnouncementContent({
+  columnWidth,
   detail,
   onOpenComposer,
+  sidePadding,
 }: {
+  columnWidth: number;
   detail: AnnouncementDetail;
   onOpenComposer: (target?: CommentReplyTarget) => void;
+  sidePadding: number;
 }) {
   const serverId = detail.id;
   const styles = useAnnouncementDetailStyles();
@@ -245,6 +195,7 @@ function SiteAnnouncementContent({
     loadMore,
     page,
     refresh: refreshComments,
+    retryLoadMore,
   } = useComments({ type: 'Announcement', id: serverId });
   const hasFocused = useRef(false);
   const rows = useMemo(() => flattenCommentRows(page?.items ?? []), [page?.items]);
@@ -287,113 +238,95 @@ function SiteAnnouncementContent({
 
   return (
     <FlatList
-      contentContainerStyle={styles.commentsContent}
+      contentContainerStyle={[styles.content, { paddingHorizontal: sidePadding }]}
       contentInsetAdjustmentBehavior="automatic"
       data={rows}
       initialNumToRender={8}
       keyExtractor={(item) => item.key}
-      maxToRenderPerBatch={6}
+      maxToRenderPerBatch={10}
       ListEmptyComponent={commentsLoading
-        ? <CommentThreadSkeleton palette={commentPalette} />
+        ? <CommentThreadSkeleton horizontalInset={0} palette={commentPalette} />
         : commentsError
           ? <CommentsError message={commentsError} onRetry={refreshComments} />
           : <CommentsEmpty />}
-      ListFooterComponent={isLoadingMore
-        ? <CommentThreadSkeleton palette={commentPalette} rows={1} />
-        : null}
+      ListFooterComponent={
+        <CommentThreadLoadingFooter loading={isLoadingMore} palette={commentPalette} />
+      }
       ListHeaderComponent={
-        <View style={styles.headerContent}>
+        <View>
           <AnnouncementArticle
+            contentWidth={columnWidth}
             html={detail.contentHtml}
             publishedAt={detail.createdAt}
-            source="server"
             title={detail.title}
           />
           <View style={styles.commentsHeading}>
             <Text style={styles.commentsTitle}>{t('announcements.comments')}</Text>
           </View>
           {commentsError && page ? (
-            <CommentsError message={commentsError} onRetry={refreshComments} />
+            <CommentsError message={commentsError} onRetry={retryLoadMore} />
           ) : null}
         </View>
       }
-      nestedScrollEnabled={process.env.EXPO_OS === 'android'}
       onEndReached={loadMore}
-      onEndReachedThreshold={0.35}
-      removeClippedSubviews={process.env.EXPO_OS === 'android'}
+      onEndReachedThreshold={0.65}
       renderItem={renderComment}
       showsVerticalScrollIndicator={false}
-      updateCellsBatchingPeriod={32}
-      windowSize={7}
-      style={styles.root}
+      updateCellsBatchingPeriod={16}
+      windowSize={11}
+      style={styles.list}
     />
   );
 }
 
 const AnnouncementArticle = memo(function AnnouncementArticle({
+  contentWidth,
   html,
   publishedAt,
-  showHeader = true,
-  source,
   title,
 }: {
+  contentWidth: number;
   html: string;
   publishedAt: string;
-  showHeader?: boolean;
-  source: 'app' | 'server';
   title: string;
 }) {
   const styles = useAnnouncementDetailStyles();
-  const { colors } = useAppTheme();
   const { t } = useTranslation('community');
   const locale = useAppLocale();
-  const { width } = useWindowDimensions();
-  const sourceLabel = source === 'app'
-    ? t('announcements.appSource')
-    : t('announcements.siteSource');
   const date = formatDate(publishedAt, locale, {
-    day: '2-digit',
-    month: '2-digit',
+    day: 'numeric',
+    month: 'long',
     year: 'numeric',
   });
 
   return (
-    <Card style={styles.articleCard}>
-      <Card.Content className="p-0" style={styles.articleBody}>
-        {showHeader ? (
-          <>
-            <Text selectable style={styles.articleTitle}>{title}</Text>
-            <Text style={styles.articleMeta}>
-              {t('announcements.sourceMeta', { date, source: sourceLabel })}
-            </Text>
-            <View style={[styles.divider, { backgroundColor: colors.separator }]} />
-          </>
-        ) : null}
-        <BookHtmlContent
-          contentWidth={Math.max(0, width - 52)}
-          html={html}
-          lineHeight={25.6}
-          textColor={colors.label as string}
-        />
-      </Card.Content>
-    </Card>
+    <View style={styles.article}>
+      <View style={styles.articleHeader}>
+        <Text selectable style={styles.articleTitle}>{title}</Text>
+        <Text style={styles.articleMeta}>
+          {t('announcements.sourceMeta', { date, source: t('announcements.siteSource') })}
+        </Text>
+      </View>
+      <View style={styles.divider} />
+      <CommunityHtmlContent contentWidth={contentWidth} html={html} />
+    </View>
   );
 });
 
 function AnnouncementDetailSkeleton() {
   const styles = useAnnouncementDetailStyles();
   const { colors } = useAppTheme();
+  const skeletonColor = { backgroundColor: colors.surfaceContainerHighest };
   return (
-    <Card accessibilityElementsHidden style={styles.articleCard}>
-      <Card.Content className="p-0" style={styles.skeletonBody}>
-        <Skeleton style={[styles.skeletonTitle, { backgroundColor: colors.card }]} />
-        <Skeleton style={[styles.skeletonMeta, { backgroundColor: colors.card }]} />
-        <Skeleton style={[styles.skeletonLine, { backgroundColor: colors.card }]} />
-        <Skeleton style={[styles.skeletonLine, { backgroundColor: colors.card }]} />
-        <Skeleton style={[styles.skeletonShort, { backgroundColor: colors.card }]} />
-        <Skeleton style={[styles.skeletonLine, { backgroundColor: colors.card }]} />
-      </Card.Content>
-    </Card>
+    <View accessibilityElementsHidden style={styles.skeletonBody}>
+      <Skeleton style={[styles.skeletonTitle, skeletonColor]} />
+      <Skeleton style={[styles.skeletonMeta, skeletonColor]} />
+      <View style={styles.divider} />
+      <Skeleton style={[styles.skeletonLine, skeletonColor]} />
+      <Skeleton style={[styles.skeletonLine, skeletonColor]} />
+      <Skeleton style={[styles.skeletonShort, skeletonColor]} />
+      <Skeleton style={[styles.skeletonLine, skeletonColor]} />
+    </View>
   );
 }
 
@@ -444,7 +377,7 @@ function CommentsEmpty() {
   const { t } = useTranslation('community');
   return (
     <View style={styles.commentsState}>
-      <IconMessage color={colors.secondaryLabel as string} size={38} strokeWidth={1.5} />
+      <IconMessage color={colors.secondaryLabel as string} size={34} strokeWidth={1.5} />
       <Text style={styles.emptyText}>{t('comments.empty')}</Text>
     </View>
   );
@@ -454,7 +387,7 @@ function toCommentPalette(colors: ReturnType<typeof useAppTheme>['colors']): Com
   return {
     accent: colors.accent,
     error: colors.error,
-    highlightColor: colors.primaryContainer,
+    highlightColor: colors.accent,
     label: colors.label,
     onSurfaceVariant: colors.secondaryLabel,
     separator: colors.separator,
@@ -463,28 +396,38 @@ function toCommentPalette(colors: ReturnType<typeof useAppTheme>['colors']): Com
 }
 
 const useAnnouncementDetailStyles = createThemedStyles((colors) => ({
-  articleBody: { gap: 8, paddingHorizontal: 16, paddingVertical: 16 },
-  articleCard: { borderCurve: 'continuous', borderRadius: 20, overflow: 'hidden' },
-  articleMeta: { color: colors.secondaryLabel, fontSize: 12, lineHeight: 16 },
-  articleTitle: { color: colors.label, fontSize: 21, fontWeight: '800', lineHeight: 28 },
-  commentsContent: { gap: 8, paddingBottom: 48, paddingHorizontal: 12, paddingTop: 10 },
-  commentsHeading: { paddingHorizontal: 4, paddingTop: 6 },
-  commentsState: { alignItems: 'center', gap: 10, paddingHorizontal: 20, paddingVertical: 36 },
-  commentsTitle: { color: colors.label, fontSize: 18, fontWeight: '800' },
-  detailContent: { gap: 12, paddingBottom: 48, paddingHorizontal: 12, paddingTop: 10 },
+  article: { paddingBottom: 8 },
+  articleHeader: { gap: 6 },
+  articleMeta: { color: colors.secondaryLabel, fontSize: 14, lineHeight: 19 },
+  articleTitle: { color: colors.label, fontSize: 26, fontWeight: '700', lineHeight: 33 },
+  commentsHeading: {
+    borderTopColor: colors.separator,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    marginBottom: 12,
+    marginTop: 16,
+    paddingTop: 20,
+  },
+  commentsState: { alignItems: 'center', gap: 10, paddingHorizontal: 20, paddingVertical: 32 },
+  commentsTitle: { color: colors.label, fontSize: 20, fontWeight: '700' },
+  content: { paddingBottom: 48, paddingTop: 12 },
   detailError: { alignItems: 'center', gap: 10, paddingHorizontal: 24, paddingVertical: 56 },
-  divider: { height: StyleSheet.hairlineWidth, marginBottom: 4, marginTop: 2 },
-  emptyText: { color: colors.secondaryLabel, fontSize: 14, textAlign: 'center' },
-  errorText: { color: colors.error, fontSize: 14, lineHeight: 20, textAlign: 'center' },
-  headerContent: { gap: 12, paddingBottom: 8 },
-  invalidDetail: { flex: 1, justifyContent: 'center' },
+  divider: {
+    backgroundColor: colors.separator,
+    height: StyleSheet.hairlineWidth,
+    marginBottom: 18,
+    marginTop: 16,
+  },
+  emptyText: { color: colors.secondaryLabel, fontSize: 15, textAlign: 'center' },
+  errorText: { color: colors.error, fontSize: 15, lineHeight: 21, textAlign: 'center' },
+  invalidDetail: { justifyContent: 'center' },
   pressed: { opacity: 0.68 },
   retryAction: { alignItems: 'center', flexDirection: 'row', gap: 6, padding: 8 },
-  retryLabel: { color: colors.accent, fontSize: 14, fontWeight: '700' },
-  root: { flex: 1 },
-  skeletonBody: { gap: 12, padding: 16 },
-  skeletonLine: { borderRadius: 6, height: 14, width: '100%' },
-  skeletonMeta: { borderRadius: 6, height: 12, width: '36%' },
-  skeletonShort: { borderRadius: 6, height: 14, width: '72%' },
-  skeletonTitle: { borderRadius: 7, height: 24, width: '68%' },
+  retryLabel: { color: colors.accent, fontSize: 15, fontWeight: '600' },
+  list: { flex: 1 },
+  root: { backgroundColor: colors.background, flex: 1 },
+  skeletonBody: { gap: 12 },
+  skeletonLine: { borderRadius: 6, height: 15, width: '100%' },
+  skeletonMeta: { borderRadius: 6, height: 13, width: '36%' },
+  skeletonShort: { borderRadius: 6, height: 15, width: '72%' },
+  skeletonTitle: { borderRadius: 7, height: 28, width: '68%' },
 }));

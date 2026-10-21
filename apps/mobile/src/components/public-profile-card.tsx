@@ -159,7 +159,7 @@ function PublicProfileCard({ avatarUrl, userId, userName, onClose }: PublicProfi
               accessibilityRole="button"
               onPress={() => {
                 onClose();
-                router.push({ pathname: '/messages/[peerId]', params: { peerId: String(userId) } });
+                router.navigate({ pathname: '/messages/[peerId]', params: { peerId: String(userId) } });
               }}
               style={({ pressed }) => [styles.messageButton, pressed && styles.pressed]}
             >

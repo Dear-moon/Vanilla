@@ -1,4 +1,4 @@
-import type { PropsWithChildren, ReactNode } from 'react';
+import type { PropsWithChildren, ReactElement, ReactNode } from 'react';
 
 import {
   NativeGroupedListPlatform,
@@ -44,11 +44,19 @@ export function NativeGroupedList({
   );
 }
 
-export function NativeGroupedListSection({
-  children,
-  title,
-}: PropsWithChildren<{ title: string }>) {
-  return <NativeGroupedListSectionPlatform title={title}>{children}</NativeGroupedListSectionPlatform>;
+export interface NativeGroupedListSectionProps extends PropsWithChildren {
+  /** React Native content centered below the section, such as a brand mark. */
+  footer?: ReactElement | undefined;
+  title: string;
+}
+
+export function NativeGroupedListSection({ children, footer, title }: NativeGroupedListSectionProps) {
+  return (
+    <NativeGroupedListSectionPlatform title={title}>
+      {children}
+      {footer}
+    </NativeGroupedListSectionPlatform>
+  );
 }
 
 export interface NativeGroupedListRowProps {

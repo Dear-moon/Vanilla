@@ -2,6 +2,7 @@ import { NativeTabs } from 'expo-router/unstable-native-tabs';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { useIsFocused } from 'expo-router';
 import { useProfile } from '@/hooks/use-profile';
 import { runAutomaticAppUpdateCheck } from '@/services/app-update-alerts';
 import { formatUnreadBadge, getUnreadCounts } from '@/services/unread-counts';

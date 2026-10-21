@@ -8,23 +8,35 @@ import {
   ThemeProvider,
 } from 'expo-router/react-navigation';
 import { Stack } from 'expo-router/stack';
+import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { BookDetailThemeProvider } from '@/components/book-detail-theme-provider';
 import { ClientSessionFeedback } from '@/components/client-session-feedback';
+import { SkeletonPulseProvider } from '@/components/skeleton';
+import { SettledLayoutProvider } from '@/hooks/use-settled-layout';
 import { ClientRealtimeEvents } from '@/components/client-realtime-events';
 import { AppLocalizationProvider } from '@/localization/localization-provider';
 import { NativeAlertHost } from '@/components/native-alert-dialog';
 import { PublicProfileHost } from '@/components/public-profile-card';
 import { useAuthentication } from '@/hooks/use-authentication';
+import { runAutomaticAppUpdateCheck } from '@/services/app-update-alerts';
 import { autoCheckInOnLaunch } from '@/services/auto-check-in';
 import { hasStoredSession, startClient } from '@/services/client';
 import { loadAppSettings } from '@/services/settings';
+import {
+  currentAppVersion,
+  hasPendingWhatsNew,
+  loadWhatsNewState,
+  markWhatsNewSeen,
+  useWhatsNewLastSeenVersion,
+} from '@/services/whats-new-store';
+import { WHATS_NEW_RELEASE } from '@/services/whats-new-release';
 import { AppThemeProvider, useAppTheme } from '@/theme/app-theme';
 import { useSystemScreenStackPreset } from '@/theme/stack-preset';
 
@@ -33,7 +45,7 @@ import { useSystemScreenStackPreset } from '@/theme/stack-preset';
 // ready before the first frame paints. The splash shows the logo normally and
 // auto-hides; it is never used to cover up a routing transition.
 
-const sessionProbe = Promise.all([hasStoredSession(), loadAppSettings()]);
+const sessionProbe = Promise.all([hasStoredSession(), loadAppSettings(), loadWhatsNewState()]);
 
 export default function RootLayout() {
   return (
@@ -42,7 +54,11 @@ export default function RootLayout() {
         <GestureHandlerRootView style={styles.gestureRoot}>
           <KeyboardProvider>
             <ToastProvider maxQueue={3}>
-              <RootLayoutContent />
+              <SettledLayoutProvider>
+                <SkeletonPulseProvider>
+                  <RootLayoutContent />
+                </SkeletonPulseProvider>
+              </SettledLayoutProvider>
             </ToastProvider>
           </KeyboardProvider>
         </GestureHandlerRootView>
@@ -64,11 +80,25 @@ function RootLayoutContent() {
   // welcome page and a first-install user goes straight to the welcome page.
   const [sessionDecided, setSessionDecided] = useState(false);
   const [hadAuthenticatedSession, setHadAuthenticatedSession] = useState(false);
+  // The stored session at launch, before a fresh sign-in can flip `hadAuthenticatedSession`.
+  const [storedSessionAtLaunch, setStoredSessionAtLaunch] = useState<boolean | null>(null);
+  const whatsNewPrompted = useRef(false);
+  const whatsNewBaselineMarked = useRef(false);
+  const whatsNewLastSeen = useWhatsNewLastSeenVersion();
+  const [updateCheckAllowed, setUpdateCheckAllowed] = useState(false);
+  const hasAuthenticatedSession = authentication.status === 'authenticated'
+    ? true
+    : authentication.status === 'signedOut'
+      ? false
+      : hadAuthenticatedSession;
+
+  // A transient refresh keeps an established app route mounted.
 
   useEffect(() => {
     let mounted = true;
     void sessionProbe.then(([stored]) => {
       if (!mounted) return;
+      setStoredSessionAtLaunch(stored);
       setHadAuthenticatedSession(stored);
       setSessionDecided(true);
     });
@@ -85,10 +115,6 @@ function RootLayoutContent() {
   useEffect(() => {
     void startClient().catch(() => undefined);
   }, []);
-
-  useEffect(() => {
-    if (authentication.status === 'authenticated') setHadAuthenticatedSession(true);
-  }, [authentication.status]);
 
   // Auto daily check-in once the session is authenticated (cold start).
   // Idempotent: the use case skips when already signed today or when the
@@ -111,11 +137,49 @@ function RootLayoutContent() {
     });
   }, [authentication.status, tSettings]);
 
-  const hasAuthenticatedSession = authentication.status === 'authenticated'
-    ? true
-    : authentication.status === 'signedOut'
-      ? false
-      : hadAuthenticatedSession;
+  useEffect(() => {
+    if (!sessionDecided || storedSessionAtLaunch !== true) return;
+    if (!hasAuthenticatedSession) return;
+    if (whatsNewPrompted.current) return;
+    if (!hasPendingWhatsNew()) return;
+    const timer = setTimeout(() => {
+      whatsNewPrompted.current = true;
+      router.push('/whats-new');
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [sessionDecided, storedSessionAtLaunch, hasAuthenticatedSession]);
+
+  useEffect(() => {
+    if (hasAuthenticatedSession) return;
+    if (!whatsNewPrompted.current) return;
+    if (hasPendingWhatsNew()) whatsNewPrompted.current = false;
+  }, [hasAuthenticatedSession, whatsNewLastSeen]);
+
+  useEffect(() => {
+    if (authentication.status !== 'authenticated') return;
+    setHadAuthenticatedSession(true);
+    if (storedSessionAtLaunch !== false || whatsNewBaselineMarked.current) return;
+    whatsNewBaselineMarked.current = true;
+    void markWhatsNewSeen(
+      currentAppVersion() ?? WHATS_NEW_RELEASE.version,
+    ).catch(() => undefined);
+  }, [authentication.status, storedSessionAtLaunch]);
+
+  // Wait for the release sheet to dismiss before presenting the update alert.
+  useEffect(() => {
+    if (!sessionDecided) return;
+    if (storedSessionAtLaunch === true && hasAuthenticatedSession && hasPendingWhatsNew()) return;
+    setUpdateCheckAllowed(true);
+  }, [sessionDecided, storedSessionAtLaunch, hasAuthenticatedSession, whatsNewLastSeen]);
+
+  useEffect(() => {
+    if (!updateCheckAllowed) return;
+    const timer = setTimeout(() => {
+      void runAutomaticAppUpdateCheck((key) => tSettings(key));
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [updateCheckAllowed, tSettings]);
+
   const navigationTheme = colorScheme === 'dark' ? DarkTheme : DefaultTheme;
   if (!sessionDecided) {
     // A plain themed frame for the sub-frame probe window (local read only,
@@ -132,6 +196,7 @@ function RootLayoutContent() {
       <BookDetailThemeProvider>
         <Stack screenOptions={systemScreenStackPreset}>
           <Stack.Protected guard={hasAuthenticatedSession}>
+          <Stack.Screen name="whats-new" options={{ headerShown: false, presentation: 'modal' }} />
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="settings" options={{ headerShown: false }} />
           <Stack.Screen name="book/[id]" options={{ title: '' }} />

@@ -5,12 +5,14 @@ import { Platform } from 'react-native';
 
 import { useAppTheme } from '@/theme/app-theme';
 
-type StackScreenOptions = React.ComponentProps<typeof Stack>['screenOptions'];
+type StackScreenOptions = NonNullable<
+  React.ComponentProps<typeof Stack>['screenOptions']
+>;
 
 const hasLiquidGlass = isLiquidGlassAvailable();
 
 export function useSystemScreenStackPreset(): StackScreenOptions {
-  const { colors } = useAppTheme();
+  const { colorScheme, colors } = useAppTheme();
 
   return useMemo(() => ({
     contentStyle: { backgroundColor: colors.background },
@@ -25,5 +27,8 @@ export function useSystemScreenStackPreset(): StackScreenOptions {
     headerShadowVisible: false,
     headerTintColor: colors.accent,
     headerTitleStyle: { color: colors.label as string },
-  }), [colors]);
+    headerTransparent: hasLiquidGlass,
+    // iOS 27 ignores UIApplication's app-wide status bar API, so the style comes from the screen's view controller.
+    statusBarStyle: colorScheme === 'dark' ? 'light' : 'dark',
+  }), [colorScheme, colors]);
 }

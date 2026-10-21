@@ -92,7 +92,7 @@ export const ReaderWebView = forwardRef<ReaderWebViewHandle, ReaderWebViewProps>
     { html, initialProgression, readingMode = 'scroll', theme, onPosition, onFootnote, onLoadEnd, style },
     ref,
   ) {
-    const webViewRef = useRef<WebView>(null);
+    const webViewRef = useRef<WebView<object>>(null);
     const onPositionRef = useRef(onPosition);
     onPositionRef.current = onPosition;
     const onFootnoteRef = useRef(onFootnote);
@@ -203,7 +203,7 @@ export const ReaderWebView = forwardRef<ReaderWebViewHandle, ReaderWebViewProps>
 
     return (
       <>
-        <WebView
+        <WebView<object>
           ref={webViewRef}
           originWhitelist={['*']}
           javaScriptEnabled

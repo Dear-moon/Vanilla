@@ -99,26 +99,6 @@ test('All browse projection keeps the complete mixed tree and empty snapshots va
   assert.deepEqual(empty.items, []);
 });
 
-test('root and folder routes preserve every browse state for a mixed folder', () => {
-  const expectedChildren = {
-    All: ['NOVEL:3', 'COMIC:4', 'FOLDER:nested'],
-    Novel: ['NOVEL:3'],
-    Comic: ['COMIC:4', 'FOLDER:nested'],
-  };
-
-  for (const media of ['All', 'Novel', 'Comic']) {
-    const routeMedia = parseShelfMediaParam(serializeShelfMedia(media));
-    const root = projectShelfBrowse(snapshot, [], routeMedia);
-    const folder = projectShelfBrowse(snapshot, ['mixed'], routeMedia);
-
-    assert.equal(root.items.some((item) => item.type === 'FOLDER' && item.id === 'mixed'), true);
-    assert.deepEqual(
-      folder.items.map((item) => `${item.type}:${item.id}`),
-      expectedChildren[media],
-    );
-  }
-});
-
 test('unresolved typed cards remain in every matching browse projection', () => {
   const unresolvedSnapshot = {
     ...snapshot,
@@ -221,4 +201,24 @@ test('shelf cards map typed items to the correct detail route type and comic ser
     ).type,
     'Novel',
   );
+});
+
+test('root and folder routes preserve every browse state for a mixed folder', () => {
+  const expectedChildren = {
+    All: ['NOVEL:3', 'COMIC:4', 'FOLDER:nested'],
+    Novel: ['NOVEL:3'],
+    Comic: ['COMIC:4', 'FOLDER:nested'],
+  };
+
+  for (const media of ['All', 'Novel', 'Comic']) {
+    const routeMedia = parseShelfMediaParam(serializeShelfMedia(media));
+    const root = projectShelfBrowse(snapshot, [], routeMedia);
+    const folder = projectShelfBrowse(snapshot, ['mixed'], routeMedia);
+
+    assert.equal(root.items.some((item) => item.type === 'FOLDER' && item.id === 'mixed'), true);
+    assert.deepEqual(
+      folder.items.map((item) => `${item.type}:${item.id}`),
+      expectedChildren[media],
+    );
+  }
 });

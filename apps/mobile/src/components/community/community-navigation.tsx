@@ -1,28 +1,7 @@
-export function CommunityHomeNavigation() {
-  return null;
-}
+import type { ComponentProps } from 'react';
+import type * as Navigation from './community-navigation.ios';
 
-export function CommunityThreadNavigation(_props: {
-  disabled: boolean;
-  locked: boolean;
-  onDelete(): void;
-  onEdit(): void;
-  onToggleLocked(): void;
-}) {
-  return null;
-}
-
-export function CommunityPublishNavigation(_props: {
-  disabled: boolean;
-  onPublish(): void;
-}) {
-  return null;
-}
-
-export function CommunityNotificationsNavigation(_props: {
-  disabled: boolean;
-  hidden: boolean;
-  onMarkAll(): void;
-}) {
-  return null;
-}
+export function CommunityHomeNavigation(_props: ComponentProps<typeof Navigation.CommunityHomeNavigation>) { return null; }
+export function CommunityThreadNavigation(_props: ComponentProps<typeof Navigation.CommunityThreadNavigation>) { return null; }
+export function CommunityPublishNavigation(_props: ComponentProps<typeof Navigation.CommunityPublishNavigation>) { return null; }
+export function CommunityNotificationsNavigation(_props: ComponentProps<typeof Navigation.CommunityNotificationsNavigation>) { return null; }

@@ -32,6 +32,8 @@ export type NativeIconName =
   | 'announcement'
   | 'appUpdate'
   | 'content'
+  | 'comicCoverOffset'
+  | 'comicPageLayout'
   | 'continueReading'
   | 'coverColor'
   | 'discover'
@@ -76,4 +78,5 @@ export type NativeIconName =
   | 'userGroup'
   | 'userName'
   | 'version'
-  | 'website';
+  | 'website'
+  | 'whatsNew';

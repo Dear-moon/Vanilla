@@ -1,0 +1,486 @@
+import { IconDownload, IconShare, IconX } from '@tabler/icons-react-native';
+import { isLiquidGlassAvailable } from 'expo-glass-effect';
+import { Image as ExpoImage } from 'expo-image';
+import { AnimatedPressable, Glass, Portal } from 'panelui-native';
+import { ImageViewer } from 'panelui-native/components/image-viewer';
+import {
+  ActivityIndicator,
+  Pressable,
+  StyleSheet,
+  View,
+  useWindowDimensions,
+} from 'react-native';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react';
+import { useTranslation } from 'react-i18next';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { showAlert } from '@/components/native-alert-dialog';
+import {
+  READER_IMAGE_VIEWER_CORNER_RADIUS,
+  READER_IMAGE_VIEWER_INSET,
+} from '@/services/reader-image-frame';
+import {
+  ReaderImageActionError,
+  saveReaderImage,
+  shareReaderImage,
+  type ReaderImageActionErrorCode,
+} from '@/services/reader-image-actions';
+import { useAppColorScheme } from '@/theme/app-theme';
+
+const hasLiquidGlass = isLiquidGlassAvailable();
+
+interface ReaderImageSize {
+  height: number;
+  width: number;
+}
+
+function useCachedReaderImageSource(source: string, loaded: boolean): string {
+  const [cachedSource, setCachedSource] = useState(source);
+  const [previousSource, setPreviousSource] = useState(source);
+  if (previousSource !== source) {
+    setPreviousSource(source);
+    setCachedSource(source);
+  }
+
+  useEffect(() => {
+    let active = true;
+    if (!/^https?:\/\//iu.test(source)) return () => {
+      active = false;
+    };
+
+    void ExpoImage.getCachePathAsync(source).then((path) => {
+      if (!active || !path) return;
+      setCachedSource(path.startsWith('file://') ? path : `file://${path}`);
+    }).catch(() => undefined);
+
+    return () => {
+      active = false;
+    };
+  }, [loaded, source]);
+
+  return cachedSource;
+}
+
+export interface ReaderImageGalleryItem {
+  height?: number;
+  source: string;
+  width?: number;
+}
+
+/** Set inside a `ReaderImageGallery`: viewers become pages of its one viewer. */
+const ReaderImageGalleryContext = createContext(false);
+
+// One viewer for several images, such as every picture in a post: opening any of them opens the gallery at that picture, and a sideways swipe turns to the next.
+export function ReaderImageGallery({
+  children,
+  items,
+}: {
+  children: ReactNode;
+  items: readonly ReaderImageGalleryItem[];
+}) {
+  const [open, setOpen] = useState(false);
+  const [index, setIndex] = useState(0);
+  const item = items[Math.min(index, Math.max(0, items.length - 1))];
+  const actions = useReaderImageActions(item?.source ?? '');
+  const imageSize = item?.width !== undefined && item.height !== undefined
+    ? { height: item.height, width: item.width }
+    : null;
+
+  return (
+    <>
+      <ImageViewer
+        blur
+        cornerRadius={READER_IMAGE_VIEWER_CORNER_RADIUS}
+        doubleTapScale={2.5}
+        haptics
+        index={index}
+        inset={READER_IMAGE_VIEWER_INSET}
+        maxScale={6}
+        onIndexChange={setIndex}
+        onOpenChange={setOpen}
+        open={open}
+        showClose={false}
+      >
+        <ReaderImageGalleryContext.Provider value>{children}</ReaderImageGalleryContext.Provider>
+      </ImageViewer>
+      {open && item ? (
+        <ReaderImageViewerActionPortal
+          {...actions}
+          imageSize={imageSize}
+          onClose={() => setOpen(false)}
+        />
+      ) : null}
+    </>
+  );
+}
+
+export interface ReaderImageViewerProps {
+  /** Gesture that opens the viewer. `longPress` leaves taps to the page. */
+  activation?: 'tap' | 'longPress';
+  alt: string;
+  children: ReactNode;
+  /** Render the image without a viewer. */
+  disabled?: boolean;
+  /** Page of the enclosing `ReaderImageGallery` this image opens. */
+  galleryIndex?: number;
+  /** The page's own image has loaded, so expo-image now holds its file. */
+  loaded?: boolean;
+  height?: number;
+  onOpenChange?: (open: boolean) => void;
+  open?: boolean;
+  radius?: number;
+  source: string;
+  width?: number;
+}
+
+export function ReaderImageViewer({
+  activation = 'tap',
+  alt,
+  children,
+  disabled = false,
+  galleryIndex,
+  height,
+  loaded = false,
+  onOpenChange,
+  open,
+  radius = 4,
+  source,
+  width,
+}: ReaderImageViewerProps) {
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
+  const { t } = useTranslation('reader');
+  const cachedSource = useCachedReaderImageSource(source, loaded);
+  const imageSource = useMemo(() => ({ uri: cachedSource }), [cachedSource]);
+  const imageSize = width !== undefined && height !== undefined
+    ? { height, width }
+    : null;
+  const isOpen = open ?? uncontrolledOpen;
+  const actions = useReaderImageActions(source);
+  const handleOpenChange = useCallback((nextOpen: boolean) => {
+    if (open === undefined) setUncontrolledOpen(nextOpen);
+    onOpenChange?.(nextOpen);
+  }, [onOpenChange, open]);
+  const longPressActivation = activation === 'longPress';
+  const longPressHandledRef = useRef(false);
+
+  const inGallery = useContext(ReaderImageGalleryContext);
+
+  if (disabled) return <>{children}</>;
+  if (inGallery && galleryIndex !== undefined) {
+    return (
+      <ImageViewer.Trigger
+        alt={alt}
+        {...(imageSize ? { height: imageSize.height, width: imageSize.width } : {})}
+        index={galleryIndex}
+        radius={radius}
+        source={imageSource}
+      >
+        {children}
+      </ImageViewer.Trigger>
+    );
+  }
+
+  return (
+    <>
+      <ImageViewer
+        blur
+        cornerRadius={READER_IMAGE_VIEWER_CORNER_RADIUS}
+        doubleTapScale={2.5}
+        haptics
+        inset={READER_IMAGE_VIEWER_INSET}
+        maxScale={6}
+        onOpenChange={handleOpenChange}
+        open={isOpen}
+        showClose={false}
+      >
+        <ImageViewer.Trigger
+          accessible={!longPressActivation}
+          alt={alt}
+          disabled={longPressActivation}
+          {...(imageSize ? { height: imageSize.height, width: imageSize.width } : {})}
+          radius={radius}
+          source={imageSource}
+        >
+          {longPressActivation ? (
+            <Pressable
+              accessibilityHint={t('accessibility.longPressPreview')}
+              accessibilityLabel={alt}
+              accessibilityRole="imagebutton"
+              delayLongPress={500}
+              onAccessibilityTap={() => handleOpenChange(true)}
+              onLongPress={() => {
+                longPressHandledRef.current = true;
+                handleOpenChange(true);
+              }}
+              onTouchCancel={() => {
+                longPressHandledRef.current = false;
+              }}
+              onTouchEnd={(event) => {
+                if (!longPressHandledRef.current) return;
+                longPressHandledRef.current = false;
+                // Keep the reader's page-turn tap handlers from also firing
+                // after a long press opened the preview.
+                event.stopPropagation();
+              }}
+            >
+              {children}
+            </Pressable>
+          ) : children}
+        </ImageViewer.Trigger>
+      </ImageViewer>
+      {isOpen ? (
+        <ReaderImageViewerActionPortal
+          {...actions}
+          imageSize={imageSize}
+          onClose={() => handleOpenChange(false)}
+        />
+      ) : null}
+    </>
+  );
+}
+
+export interface ReaderImageViewerActionsProps {
+  imageSize: ReaderImageSize | null;
+  isSaving: boolean;
+  isSharing: boolean;
+  onClose: () => void;
+  onSave: () => void;
+  onShare: () => void;
+}
+
+export function ReaderImageViewerActionPortal(props: ReaderImageViewerActionsProps) {
+  return (
+    <Portal>
+      <View pointerEvents="box-none" style={StyleSheet.absoluteFill}>
+        <ReaderImageViewerBlankTapGuard imageSize={props.imageSize} />
+        <ReaderImageViewerBottomTouchShield />
+        <ReaderImageViewerActionBar {...props} />
+      </View>
+    </Portal>
+  );
+}
+
+function ReaderImageViewerBottomTouchShield() {
+  const { bottom } = useSafeAreaInsets();
+  return (
+    <View
+      accessible={false}
+      onResponderRelease={() => undefined}
+      onResponderTerminationRequest={() => false}
+      onStartShouldSetResponder={() => true}
+      style={[styles.bottomTouchShield, { height: bottom + 112 }]}
+    />
+  );
+}
+
+function ReaderImageViewerBlankTapGuard({ imageSize }: { imageSize: ReaderImageSize | null }) {
+  const { height, width } = useWindowDimensions();
+  const { bottom, top } = useSafeAreaInsets();
+  const inset = READER_IMAGE_VIEWER_INSET;
+  const verticalInset = Math.max(top, bottom) + inset;
+  const boxWidth = Math.max(width - inset * 2, 1);
+  const boxHeight = Math.max(height - verticalInset * 2, 1);
+  const imageWidth = imageSize?.width ?? boxWidth;
+  const imageHeight = imageSize?.height ?? boxHeight;
+  const scale = Math.min(boxWidth / imageWidth, boxHeight / imageHeight);
+  const frameWidth = imageWidth * scale;
+  const frameHeight = imageHeight * scale;
+  const frameLeft = inset + (boxWidth - frameWidth) / 2;
+  const frameTop = verticalInset + (boxHeight - frameHeight) / 2;
+  const frameRight = width - frameLeft - frameWidth;
+  const frameBottom = height - frameTop - frameHeight;
+
+  const swallow = () => undefined;
+  return (
+    <View pointerEvents="box-none" style={StyleSheet.absoluteFill}>
+      <Pressable
+        accessibilityElementsHidden
+        onPress={swallow}
+        style={[styles.tapGuard, { height: Math.max(frameTop, 0), left: 0, right: 0, top: 0 }]}
+      />
+      <Pressable
+        accessibilityElementsHidden
+        onPress={swallow}
+        style={[styles.tapGuard, { bottom: 0, left: 0, top: frameTop, width: Math.max(frameLeft, 0) }]}
+      />
+      <Pressable
+        accessibilityElementsHidden
+        onPress={swallow}
+        style={[styles.tapGuard, { bottom: 0, right: 0, top: frameTop, width: Math.max(frameRight, 0) }]}
+      />
+      <Pressable
+        accessibilityElementsHidden
+        onPress={swallow}
+        style={[styles.tapGuard, { bottom: 0, height: Math.max(frameBottom, 0), left: 0, right: 0 }]}
+      />
+    </View>
+  );
+}
+
+export function ReaderImageViewerActionBar({
+  isSaving,
+  isSharing,
+  onClose,
+  onSave,
+  onShare,
+}: ReaderImageViewerActionsProps) {
+  const { bottom } = useSafeAreaInsets();
+  const { t } = useTranslation('reader');
+  const colorScheme = useAppColorScheme();
+  // Liquid glass takes the app scheme, so in light mode the buttons are light over the light backdrop and white glyphs wash out.
+  const iconColor = hasLiquidGlass && colorScheme === 'light' ? '#1C1C1E' : '#FFFFFF';
+
+  return (
+    <View
+      pointerEvents="box-none"
+      style={[styles.actionBar, { bottom: bottom + 16 }]}
+    >
+      <LiquidGlassActionButton
+        accessibilityLabel={t('accessibility.shareImage')}
+        disabled={isSaving || isSharing}
+        onPress={() => void onShare()}
+      >
+        {isSharing ? <ActivityIndicator color={iconColor} size="small" /> : <IconShare color={iconColor} size={20} />}
+      </LiquidGlassActionButton>
+      <LiquidGlassActionButton
+        accessibilityLabel={t('accessibility.saveImage')}
+        disabled={isSaving || isSharing}
+        onPress={() => void onSave()}
+      >
+        {isSaving ? <ActivityIndicator color={iconColor} size="small" /> : <IconDownload color={iconColor} size={20} />}
+      </LiquidGlassActionButton>
+      <LiquidGlassActionButton
+        accessibilityLabel={t('accessibility.closeImagePreview')}
+        onPress={onClose}
+      >
+        <IconX color={iconColor} size={20} />
+      </LiquidGlassActionButton>
+    </View>
+  );
+}
+
+interface LiquidGlassActionButtonProps {
+  accessibilityLabel: string;
+  children: ReactNode;
+  disabled?: boolean;
+  onPress: () => void;
+}
+
+function LiquidGlassActionButton({
+  accessibilityLabel,
+  children,
+  disabled = false,
+  onPress,
+}: LiquidGlassActionButtonProps) {
+  return (
+    <Glass
+      fallbackClassName="border border-white/20 bg-black/60"
+      interactive
+      radius={22}
+      className="h-11 w-11 items-center justify-center"
+    >
+      <AnimatedPressable
+        accessibilityLabel={accessibilityLabel}
+        accessibilityRole="button"
+        className="h-11 w-11 items-center justify-center"
+        disabled={disabled}
+        onPress={onPress}
+        pressOpacity={0.72}
+        pressScale={0.94}
+      >
+        {children}
+      </AnimatedPressable>
+    </Glass>
+  );
+}
+
+export function useReaderImageActions(imageUri: string) {
+  const { t } = useTranslation('reader');
+  const [isSaving, setIsSaving] = useState(false);
+  const [isSharing, setIsSharing] = useState(false);
+  const mountedRef = useRef(true);
+
+  useEffect(() => () => {
+    mountedRef.current = false;
+  }, []);
+
+  const showActionMessage = useCallback((message: string) => {
+    showAlert(t('images.actionAlertTitle'), message);
+  }, [t]);
+
+  const getActionErrorMessage = useCallback((error: unknown, action: 'save' | 'share') => {
+    if (error instanceof ReaderImageActionError) {
+      const messages: Record<ReaderImageActionErrorCode, string> = {
+        'access-denied': t('images.errors.accessDenied'),
+        'download-failed': t('images.errors.downloadFailed'),
+        'invalid-url': t('images.errors.invalidUrl'),
+        'not-enough-space': t('images.errors.notEnoughSpace'),
+        'save-failed': t('images.errors.saveFailed'),
+        'share-failed': t('images.errors.shareFailed'),
+        'unsupported-format': t('images.errors.unsupportedFormat'),
+      };
+      return messages[error.code];
+    }
+    return action === 'save'
+      ? t('images.errors.saveFailed')
+      : t('images.errors.shareFailed');
+  }, [t]);
+
+  const onSave = useCallback(async () => {
+    if (isSaving || isSharing) return;
+    setIsSaving(true);
+    try {
+      await saveReaderImage(imageUri);
+      showActionMessage(t('images.saved'));
+    } catch (error) {
+      showActionMessage(getActionErrorMessage(error, 'save'));
+    } finally {
+      if (mountedRef.current) setIsSaving(false);
+    }
+  }, [getActionErrorMessage, imageUri, isSaving, isSharing, showActionMessage, t]);
+
+  const onShare = useCallback(async () => {
+    if (isSaving || isSharing) return;
+    setIsSharing(true);
+    try {
+      await shareReaderImage(imageUri, t('images.shareTitle'));
+    } catch (error) {
+      showActionMessage(getActionErrorMessage(error, 'share'));
+    } finally {
+      if (mountedRef.current) setIsSharing(false);
+    }
+  }, [getActionErrorMessage, imageUri, isSaving, isSharing, showActionMessage, t]);
+
+  return { isSaving, isSharing, onSave, onShare };
+}
+
+const styles = StyleSheet.create({
+  actionBar: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: 12,
+    justifyContent: 'center',
+    left: 0,
+    position: 'absolute',
+    right: 0,
+  },
+  bottomTouchShield: {
+    bottom: 0,
+    left: 0,
+    position: 'absolute',
+    right: 0,
+  },
+  tapGuard: {
+    backgroundColor: 'transparent',
+    position: 'absolute',
+  },
+});

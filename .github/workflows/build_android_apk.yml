@@ -114,14 +114,14 @@ jobs:
         uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: 17
+          java-version: 21
 
       - name: Install JavaScript dependencies
         run: npm ci
 
       - name: Generate Android project
         working-directory: apps/mobile
-        run: npx expo prebuild --non-interactive --no-install --platform android
+        run: CI=1 npx expo prebuild --no-install --no-clean --platform android
 
       # Enhanced caching（v6 默认）：带 restore keys 与本地 build cache，
       # 避免 Basic provider 因 prebuild 动态 versionCode 导致的永久 cache miss。
@@ -157,13 +157,13 @@ jobs:
           set -euo pipefail
           APK_PATH="apps/mobile/android/app/build/outputs/apk/release/app-release-unsigned.apk"
           test -f "$APK_PATH"
-          cp "$APK_PATH" "novella-${{ env.APP_ARTIFACT_ID }}-unsigned.apk"
+          cp "$APK_PATH" "vanilla-${{ env.APP_ARTIFACT_ID }}-unsigned.apk"
 
       - name: Upload APK
         uses: actions/upload-artifact@v7
         with:
-          name: novella-android-unsigned-apk-${{ env.APP_ARTIFACT_ID }}
-          path: novella-*-unsigned.apk
+          name: vanilla-android-unsigned-apk-${{ env.APP_ARTIFACT_ID }}
+          path: vanilla-*-unsigned.apk
           if-no-files-found: error
           retention-days: 14
           compression-level: 0
@@ -254,7 +254,7 @@ jobs:
         uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: 17
+          java-version: 21
 
       - name: Install JavaScript dependencies
         run: npm ci
@@ -265,7 +265,7 @@ jobs:
           # 只开启签名模式，不传任何实际密钥；密码在 Build signed APK 步骤
           # 通过环境变量提供，避免进 build.gradle 后被 Gradle cache 缓存。
           ENABLE_ANDROID_SIGNING: "1"
-        run: npx expo prebuild --non-interactive --no-install --platform android
+        run: CI=1 npx expo prebuild --no-install --no-clean --platform android
 
       # Enhanced caching（v6 默认）：带 restore keys 与本地 build cache，
       # 避免 Basic provider 因 prebuild 动态 versionCode 导致的永久 cache miss。
@@ -332,13 +332,13 @@ jobs:
             exit 1
           fi
 
-          cp "$APK_PATH" "novella-${VERSION}-${{ env.APP_BUILD_NUMBER }}-signed.apk"
+          cp "$APK_PATH" "vanilla-${VERSION}-${{ env.APP_BUILD_NUMBER }}-signed.apk"
 
       - name: Upload APK
         uses: actions/upload-artifact@v7
         with:
-          name: novella-android-signed-apk
-          path: novella-*-signed.apk
+          name: vanilla-android-signed-apk
+          path: vanilla-*-signed.apk
           if-no-files-found: error
           retention-days: 14
           compression-level: 0

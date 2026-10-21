@@ -1,7 +1,8 @@
 {
   "ios": {
     "CFBundleDisplayName": "Vanilla",
-    "NSPhotoLibraryAddUsageDescription": "允許 Vanilla 將圖片儲存到你的照片圖庫。"
+    "NSPhotoLibraryAddUsageDescription": "允許 Vanilla 將圖片儲存到你的照片圖庫。",
+    "NSPhotoLibraryUsageDescription": "允許 Vanilla 從你的照片圖庫選擇圖片插入社群貼文。"
   },
   "android": {
     "app_name": "Vanilla"

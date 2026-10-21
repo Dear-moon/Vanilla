@@ -1,14 +1,3 @@
-import { forwardRef, useImperativeHandle } from 'react';
+import type { NativeSearchControlsProps } from './native-search-controls.types';
 
-import {
-  type NativeSearchControlsHandle,
-  type NativeSearchControlsProps,
-} from '@/components/native-search-controls.types';
-
-export const NativeSearchControls = forwardRef<
-  NativeSearchControlsHandle,
-  NativeSearchControlsProps
->(function NativeSearchControls(_props, ref) {
-  useImperativeHandle(ref, () => ({ setQuery: () => {} }), []);
-  return null;
-});
+export function NativeSearchControls(_props: NativeSearchControlsProps) { return null; }

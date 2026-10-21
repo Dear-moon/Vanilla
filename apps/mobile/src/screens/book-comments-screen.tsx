@@ -11,9 +11,8 @@ import {
 
 import { showAlert } from '@/components/native-alert-dialog';
 import { IconMessage, IconRefresh } from '@tabler/icons-react-native';
-import { PaperProvider } from 'react-native-paper';
-
 import { BookCommentsNavigation } from '@/components/book-comments-navigation';
+import { HorizontalSafeArea } from '@/components/horizontal-safe-area';
 import type { CommentThreadPalette } from '@/components/comment-thread';
 import {
   CommentThreadSkeleton,
@@ -110,7 +109,7 @@ export function BookCommentsScreen({ bookId, target: commentTarget }: BookCommen
   );
 
   return (
-    <PaperProvider theme={detailTheme.paperTheme}>
+    <>
       <BookCommentsNavigation onCompose={openComposer} palette={palette} />
       <NativeScreenScaffold
         actions={[
@@ -131,7 +130,7 @@ export function BookCommentsScreen({ bookId, target: commentTarget }: BookCommen
         contentColor={palette.onSurface}
       >
         <FlatList
-          style={[styles.root, { backgroundColor: palette.surface }]}
+          style={styles.list}
           contentInsetAdjustmentBehavior="automatic"
           contentContainerStyle={styles.content}
           data={rows}
@@ -162,7 +161,7 @@ export function BookCommentsScreen({ bookId, target: commentTarget }: BookCommen
             )
           }
           ListFooterComponent={
-            isLoadingMore ? <CommentThreadSkeleton palette={commentPalette} rows={1} /> : null
+            isLoadingMore ? <CommentThreadSkeleton palette={commentPalette} rows={1} /> : undefined
           }
           ListHeaderComponent={
             error && page ? (
@@ -180,7 +179,7 @@ export function BookCommentsScreen({ bookId, target: commentTarget }: BookCommen
                   </Pressable>
                 </View>
               </View>
-            ) : null
+            ) : undefined
           }
           onEndReached={loadMore}
           onEndReachedThreshold={0.35}
@@ -191,7 +190,7 @@ export function BookCommentsScreen({ bookId, target: commentTarget }: BookCommen
           windowSize={7}
         />
       </NativeScreenScaffold>
-    </PaperProvider>
+    </>
   );
 }
 
@@ -217,6 +216,7 @@ const styles = StyleSheet.create({
   header: { gap: 16, paddingBottom: 10, paddingHorizontal: 16, paddingTop: 12 },
   inlineButton: { alignItems: 'center', flexDirection: 'row', gap: 6, padding: 6 },
   inlineButtonLabel: { fontSize: 14, fontWeight: '600' },
+  list: { flex: 1 },
   pressed: { opacity: 0.68 },
   root: { flex: 1 },
 });

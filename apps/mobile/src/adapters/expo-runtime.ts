@@ -57,21 +57,18 @@ export class ExpoCredentialStore implements CredentialStore {
 }
 
 class ExpoKeyValueStore implements KeyValueStore {
-  readonly #database = SQLite.openDatabaseAsync('novella.db');
+  readonly #database = SQLite.openDatabaseSync('novella.db');
   readonly #initialized: Promise<void>;
 
   constructor() {
-    this.#initialized = this.#database.then((database) =>
-      database.execAsync(
-        'CREATE TABLE IF NOT EXISTS key_value (key TEXT PRIMARY KEY NOT NULL, value TEXT NOT NULL)',
-      ),
+    this.#initialized = this.#database.execAsync(
+      'CREATE TABLE IF NOT EXISTS key_value (key TEXT PRIMARY KEY NOT NULL, value TEXT NOT NULL)',
     );
   }
 
   async get(key: string): Promise<string | null> {
     await this.#initialized;
-    const database = await this.#database;
-    const row = await database.getFirstAsync<{ value: string }>(
+    const row = await this.#database.getFirstAsync<{ value: string }>(
       'SELECT value FROM key_value WHERE key = ?',
       key,
     );
@@ -80,8 +77,7 @@ class ExpoKeyValueStore implements KeyValueStore {
 
   async set(key: string, value: string): Promise<void> {
     await this.#initialized;
-    const database = await this.#database;
-    await database.runAsync(
+    await this.#database.runAsync(
       'INSERT OR REPLACE INTO key_value (key, value) VALUES (?, ?)',
       key,
       value,
@@ -90,8 +86,7 @@ class ExpoKeyValueStore implements KeyValueStore {
 
   async delete(key: string): Promise<void> {
     await this.#initialized;
-    const database = await this.#database;
-    await database.runAsync('DELETE FROM key_value WHERE key = ?', key);
+    await this.#database.runAsync('DELETE FROM key_value WHERE key = ?', key);
   }
 }
 
@@ -437,8 +432,11 @@ function shouldAttachBackendIdentity(url: string): boolean {
   }
 }
 
-function toAppLifecycleState(status: AppStateStatus): AppLifecycleState {
-  return status === 'active' ? 'foreground' : 'background';
+function toAppLifecycleState(
+  status: AppStateStatus | null | undefined | string,
+): AppLifecycleState {
+  // iOS emits `inactive` for transient overlays and transitions (Control Center, notification shade, calls).
+  return status === 'background' ? 'background' : 'foreground';
 }
 
 export const REFRESH_TOKEN_KEY = AUTH_CREDENTIAL_KEYS.refreshToken;

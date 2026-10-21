@@ -1,7 +1,6 @@
 import {
   hexFromArgb,
 } from '@material/material-color-utilities';
-import { MD3DarkTheme, MD3LightTheme, type MD3Theme } from 'react-native-paper';
 import { extractBlurHashPlaceholder } from '@novella/api-client';
 
 import {
@@ -32,7 +31,6 @@ export interface BookDetailPalette {
 
 export interface BookDetailTheme {
   palette: BookDetailPalette;
-  paperTheme: MD3Theme;
 }
 
 export function interpolateBookDetailTheme(
@@ -96,14 +94,6 @@ export function interpolateBookDetailTheme(
         amount,
       ),
     },
-    paperTheme: {
-      ...to.paperTheme,
-      colors: interpolateColorValues(
-        from.paperTheme.colors,
-        to.paperTheme.colors,
-        amount,
-      ) as MD3Theme['colors'],
-    },
   };
 }
 
@@ -133,7 +123,6 @@ export function createBookDetailTheme({
       : coverSeedForProfile(extractedSeed, colorProfile),
     variant: extractedSeed === null ? dynamicSchemeVariant : 'tonalSpot',
   });
-  const base = isDark ? MD3DarkTheme : MD3LightTheme;
   const schemeColors = {
     primary: hexFromArgb(scheme.primary),
     onPrimary: hexFromArgb(scheme.onPrimary),
@@ -189,20 +178,6 @@ export function createBookDetailTheme({
     surface,
   ];
 
-  const paperTheme: MD3Theme = {
-    ...base,
-    dark: isDark,
-    colors: {
-      ...base.colors,
-      ...schemeColors,
-      background: surface,
-      surface,
-      onSurface,
-      onSurfaceVariant,
-      outlineVariant,
-    },
-  };
-
   return {
     palette: {
       background: surface,
@@ -222,7 +197,6 @@ export function createBookDetailTheme({
       surface,
       surfaceContainerHighest,
     },
-    paperTheme,
   };
 }
 
@@ -252,21 +226,6 @@ function rgbaFromHex(hex: string, alpha: number): string {
   const green = Number.parseInt(normalized.slice(2, 4), 16);
   const blue = Number.parseInt(normalized.slice(4, 6), 16);
   return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
-}
-
-function interpolateColorValues(from: unknown, to: unknown, progress: number): unknown {
-  if (typeof from === 'string' && typeof to === 'string') {
-    return interpolateCssColor(from, to, progress);
-  }
-  if (isPlainObject(from) && isPlainObject(to)) {
-    return Object.fromEntries(
-      Object.entries(to).map(([key, value]) => [
-        key,
-        interpolateColorValues(from[key], value, progress),
-      ]),
-    );
-  }
-  return to;
 }
 
 function interpolateCssColor(from: string, to: string, progress: number): string {
@@ -310,6 +269,15 @@ function decode83(value: string): number {
     result = result * 83 + digit;
   }
   return result;
+}
+
+function enhanceCoverForBackground(seed: string): string {
+  const hsl = rgbToHsl(hexToRgb(seed));
+  return rgbToHex(hslToRgb({
+    h: hsl.h,
+    s: Math.min(1, hsl.s * 1.5 + 0.1),
+    l: clamp(hsl.l * 0.9, 0.15, 0.75),
+  }));
 }
 
 function coverSeedForProfile(seed: string, profile: BookColorProfile): string {

@@ -10,6 +10,16 @@ test('private-message unread counts contribute to Community even without unread 
   });
 });
 
+test('empty badges disappear and unread totals above 99 use the same cap at every entry', () => {
+  assert.equal(formatUnreadBadge(0), undefined);
+  assert.equal(formatUnreadBadge(-1), undefined);
+  assert.equal(formatUnreadBadge(3), '3');
+  assert.equal(formatUnreadBadge(99), '99');
+  const unread = getUnreadCounts({ unreadDirectMessageCount: 80, unreadNotificationCount: 30 });
+  assert.equal(formatUnreadBadge(unread.directMessages), '80');
+  assert.equal(formatUnreadBadge(unread.total), '99+');
+});
+
 test('reading notifications and private messages clears only its own part of the aggregate', () => {
   const profile = { unreadDirectMessageCount: 3, unreadNotificationCount: 5 };
   assert.deepEqual(getUnreadCounts(profile), { directMessages: 3, notifications: 5, total: 8 });
@@ -19,14 +29,4 @@ test('reading notifications and private messages clears only its own part of the
   assert.deepEqual(getUnreadCounts({ ...profile, unreadDirectMessageCount: 0 }), {
     directMessages: 0, notifications: 5, total: 5,
   });
-});
-
-test('empty badges disappear and unread totals above 99 use the same cap at every entry', () => {
-  assert.equal(formatUnreadBadge(0), undefined);
-  assert.equal(formatUnreadBadge(-1), undefined);
-  assert.equal(formatUnreadBadge(3), '3');
-  assert.equal(formatUnreadBadge(99), '99');
-  const unread = getUnreadCounts({ unreadDirectMessageCount: 80, unreadNotificationCount: 30 });
-  assert.equal(formatUnreadBadge(unread.directMessages), '80');
-  assert.equal(formatUnreadBadge(unread.total), '99+');
 });

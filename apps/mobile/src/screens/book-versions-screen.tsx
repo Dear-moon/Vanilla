@@ -16,9 +16,11 @@ import {
   IconUserCircle,
 } from '@tabler/icons-react-native';
 
+import { useAppTheme } from '@/theme/app-theme';
 import type { BookDetail } from '@novella/api-client';
 
 import { useBookDetailRouteTheme } from '@/components/book-detail-theme-provider';
+import { HorizontalSafeArea } from '@/components/horizontal-safe-area';
 import type { BookUserMessage } from '@/hooks/use-book-detail';
 import { bookDetails } from '@/services/client';
 import {
@@ -35,6 +37,7 @@ export interface BookVersionsScreenProps {
 
 export function BookVersionsScreen({ bookId, seriesTitle }: BookVersionsScreenProps) {
   const { t } = useTranslation('book');
+  const { colors } = useAppTheme();
   const { t: tCommon } = useTranslation('common');
   const navigation = useNavigation<RootStackNavigation>('/');
   const { palette } = useBookDetailRouteTheme(bookId, null, null, true);
@@ -79,6 +82,7 @@ export function BookVersionsScreen({ bookId, seriesTitle }: BookVersionsScreenPr
   };
 
   return (
+    <HorizontalSafeArea style={[styles.scroll, { backgroundColor: colors.background }]}>
     <ScrollView
       contentInsetAdjustmentBehavior="automatic"
       contentContainerStyle={styles.content}
@@ -178,6 +182,7 @@ export function BookVersionsScreen({ bookId, seriesTitle }: BookVersionsScreenPr
         </View>
       ) : null}
     </ScrollView>
+    </HorizontalSafeArea>
   );
 }
 
@@ -190,7 +195,8 @@ const styles = StyleSheet.create({
   pressed: { opacity: 0.68 },
   retryButton: { alignItems: 'center', flexDirection: 'row', gap: 7, padding: 8 },
   retryLabel: { fontSize: 15, fontWeight: '600' },
-  scroll: {},
+  scroll: { flex: 1 },
+  scrollBody: { flex: 1 },
   sheetHeading: { alignItems: 'center', flexDirection: 'row', gap: 10 },
   sheetSection: { gap: 16 },
   sheetTitle: { fontSize: 17, fontWeight: '700', lineHeight: 22 },

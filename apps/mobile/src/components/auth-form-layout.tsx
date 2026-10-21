@@ -44,12 +44,15 @@ export function AuthFormLayout({
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={[styles.root, { backgroundColor: palette.background }]}
       >
-        <StatusBar style={palette.isDark ? 'light' : 'dark'} />
         <ScrollView
           contentInsetAdjustmentBehavior="automatic"
           contentContainerStyle={[
             styles.scrollContent,
-            { paddingBottom: Math.max(32, insets.bottom + 20) },
+            {
+              paddingBottom: Math.max(32, insets.bottom + 20),
+              paddingLeft: 22 + insets.left,
+              paddingRight: 22 + insets.right,
+            },
           ]}
           keyboardShouldPersistTaps="handled"
           nestedScrollEnabled={process.env.EXPO_OS === 'android'}
