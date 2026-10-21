@@ -1,0 +1,47 @@
+diff --git a/node_modules/@novella/mobile/node_modules/@expo/ui/src/jetpack-compose/RNHostView/index.tsx b/node_modules/@novella/mobile/node_modules/@expo/ui/src/jetpack-compose/RNHostView/index.tsx
+--- a/node_modules/@novella/mobile/node_modules/@expo/ui/src/jetpack-compose/RNHostView/index.tsx
++++ b/node_modules/@novella/mobile/node_modules/@expo/ui/src/jetpack-compose/RNHostView/index.tsx
+@@ -19,6 +19,8 @@
+    * @default false
+    */
+   matchContents?: boolean | { vertical?: boolean; horizontal?: boolean };
++  /** Custom windows need their own touch dispatch and measurement origin. */
++  layoutRoot?: boolean;
+   /**
+    * Called on mount and whenever this view's layout in the React Native view tree changes.
+    * With `matchContents`, the reported size is the one measured from the hosted view.
+@@ -69,7 +71,8 @@
+   // it, so it dispatches its own touches and is measured from itself. Everywhere else the surface
+   // root already streams this subtree's touches, and a second stream in a second coordinate space
+   // is what makes a `Pressable` drop its press on the first finger movement.
+-  const layoutRoot = useIsPresentedInOwnWindow();
++  const presentedInOwnWindow = useIsPresentedInOwnWindow();
++  const layoutRoot = props.layoutRoot ?? presentedInOwnWindow;
+ 
+   const nativeProps = transformProps(props, layoutRoot);
+ 
+diff --git a/node_modules/@novella/mobile/node_modules/@expo/ui/build/jetpack-compose/RNHostView/index.d.ts b/node_modules/@novella/mobile/node_modules/@expo/ui/build/jetpack-compose/RNHostView/index.d.ts
+--- a/node_modules/@novella/mobile/node_modules/@expo/ui/build/jetpack-compose/RNHostView/index.d.ts
++++ b/node_modules/@novella/mobile/node_modules/@expo/ui/build/jetpack-compose/RNHostView/index.d.ts
+@@ -20,6 +20,8 @@
+      * With `matchContents`, the reported size is the one measured from the hosted view.
+      */
+     onLayout?: (event: LayoutChangeEvent) => void;
++    /** Custom windows need their own touch dispatch and measurement origin. */
++    layoutRoot?: boolean;
+     /**
+      * The RN View to be hosted.
+      */
+diff --git a/node_modules/@novella/mobile/node_modules/@expo/ui/build/jetpack-compose/RNHostView/index.js b/node_modules/@novella/mobile/node_modules/@expo/ui/build/jetpack-compose/RNHostView/index.js
+--- a/node_modules/@novella/mobile/node_modules/@expo/ui/build/jetpack-compose/RNHostView/index.js
++++ b/node_modules/@novella/mobile/node_modules/@expo/ui/build/jetpack-compose/RNHostView/index.js
+@@ -24,7 +24,8 @@
+     // it, so it dispatches its own touches and is measured from itself. Everywhere else the surface
+     // root already streams this subtree's touches, and a second stream in a second coordinate space
+     // is what makes a `Pressable` drop its press on the first finger movement.
+-    const layoutRoot = useIsPresentedInOwnWindow();
++    const presentedInOwnWindow = useIsPresentedInOwnWindow();
++    const layoutRoot = props.layoutRoot ?? presentedInOwnWindow;
+     const nativeProps = transformProps(props, layoutRoot);
+     return /*#__PURE__*/ _createElement(NativeRNHostView, {
+         ...nativeProps,

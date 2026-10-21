@@ -33,6 +33,7 @@ export function NativeBottomSheet({
             Android view transparent avoids unclipped full-height rectangles
             when partial sheets translate or resize their RN content. */}
         <RNHostView
+          layoutRoot
           matchContents={fitToContents}
           modifiers={fitToContents ? [composeWidth(contentWidth)] : []}
         >
