@@ -8,7 +8,7 @@ import {
   useMaterialColors,
 } from '@expo/ui/jetpack-compose';
 import { fillMaxWidth, padding, Shapes, clip, clickable } from '@expo/ui/jetpack-compose/modifiers';
-import type { PropsWithChildren } from 'react';
+import { Children, type PropsWithChildren } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { NativeTopAppBarScaffold } from '../../modules/novella-ui';
@@ -73,7 +73,7 @@ export function NativeGroupedListSectionPlatform({ children, title }: PropsWithC
   // OLED dark swaps the Material surface roles for the pure-black app palette.
   const sectionColor = isOledDark ? colors.secondaryLabel as string : materialColors.onSurfaceVariant;
   const dividerColor = isOledDark ? colors.separator as string : materialColors.outlineVariant;
-  const rows = Array.isArray(children) ? children : [children];
+  const rows = Children.toArray(children);
 
   return (
     <Column modifiers={[fillMaxWidth()]} verticalArrangement={{ spacedBy: 6 }}>
