@@ -14,7 +14,7 @@ export interface ReaderChapterBarOrder {
 }
 
 const CHROME_CONTENT_GAP = 16;
-const TOOLBAR_HEIGHT = {
+export const READER_TOOLBAR_HEIGHT = {
   android: { bottom: 56, top: 56 },
   ios: { bottom: 44, top: 44 },
 } as const;
@@ -35,7 +35,7 @@ export function createReaderChromeInsets(
   safeAreaBottom: number,
 ): ReaderChromeInsets {
   if (platform !== 'android' && platform !== 'ios') return { bottom: 0, top: 0 };
-  const toolbar = TOOLBAR_HEIGHT[platform];
+  const toolbar = READER_TOOLBAR_HEIGHT[platform];
   return {
     bottom: Math.max(0, safeAreaBottom) + toolbar.bottom + CHROME_CONTENT_GAP,
     top: Math.max(0, safeAreaTop) + toolbar.top + CHROME_CONTENT_GAP,

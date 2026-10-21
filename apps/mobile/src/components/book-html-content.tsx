@@ -11,6 +11,7 @@ import { createHtmlPreviewSource } from '@/components/html-preview-source';
 import { createReaderFootnoteRenderer } from '@/components/reader-footnote-renderer';
 import { createReaderHtmlImageRenderer } from '@/components/reader-html-image';
 import { createHtmlRubyRenderers } from '@/components/html-ruby-renderer';
+import { RENDER_HTML_DEFAULTS } from '@/components/render-html-defaults';
 import type { ReaderImageDimensions } from '@/services/reader-image-dimensions';
 import { useAppTheme } from '@/theme/app-theme';
 
@@ -183,6 +184,7 @@ export function BookHtmlContent({
 
   return (
     <RenderHTML
+      {...RENDER_HTML_DEFAULTS}
       baseStyle={baseStyle}
       contentWidth={contentWidth}
       customHTMLElementModels={readerHtmlElementModels}

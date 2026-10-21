@@ -41,6 +41,7 @@ import {
   type ReaderImagePreviewHostHandle,
   type ReaderImagePreviewSource,
 } from '@/components/reader-image-preview';
+import { ReaderCollapsedInfo } from '@/components/reader-collapsed-info';
 import { ReaderNavigation } from '@/components/reader-navigation';
 import { ReaderSkiaScroll } from '@/components/reader-skia-scroll';
 import { ReaderSkiaTile } from '@/components/reader-skia-tile';
@@ -1090,6 +1091,15 @@ export function ReaderScreen({ bookId, sortNum, openPosition = 'saved' }: Reader
             )}
           </View>
         ) : null}
+        <ReaderCollapsedInfo
+          bottom={stableSafeArea.bottom}
+          color={readerTextColor}
+          pageLabel={pageProgress.total > 0 ? `${pageProgress.current} / ${pageProgress.total}` : ''}
+          title={readerTitle}
+          top={stableSafeArea.top}
+          visible={settings.readerCollapsedInfo && mode === 'paged' && chromeHidden
+            && Boolean(presentation) && !isLoading && !viewportTransitionVisible}
+        />
         <ReaderReflowOverlayHost
           ref={reflowOverlayRef}
           accentColor={colors.accent as string}

@@ -90,3 +90,10 @@ test('comic page fit mode defaults to screen and rejects unknown values', () => 
     'screen',
   );
 });
+
+test('collapsed reader information is enabled by default and preserves an explicit opt-out', () => {
+  assert.equal(decodeAppSettings(null).readerCollapsedInfo, true);
+  assert.equal(decodeAppSettings({ readerCollapsedInfo: false }).readerCollapsedInfo, false);
+  assert.equal(decodeAppSettings({ readerCollapsedInfo: true }).readerCollapsedInfo, true);
+  assert.equal(decodeAppSettings({ readerCollapsedInfo: 'false' }).readerCollapsedInfo, true);
+});

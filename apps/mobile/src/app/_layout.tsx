@@ -418,6 +418,17 @@ function RootLayoutContent() {
             <Stack.Screen name="reset-password" options={{ headerShown: !usesComposeBottomSheets, title: tAuth('navigation.recover') }} />
             <Stack.Screen name="reset-password/verify" options={{ headerShown: !usesComposeBottomSheets, title: tAuth('navigation.recover') }} />
             <Stack.Screen name="reset-password/new-password" options={{ headerShown: !usesComposeBottomSheets, title: tAuth('navigation.recover') }} />
+            <Stack.Screen
+              name="human-verification"
+              options={{
+                ...(usesComposeBottomSheets
+                  ? { animation: 'none', contentStyle: { backgroundColor: 'transparent' } }
+                  : { sheetAllowedDetents: 'fitToContents', sheetGrabberVisible: true }),
+                headerShown: false,
+                presentation: usesComposeBottomSheets ? 'transparentModal' : 'formSheet',
+                title: '',
+              }}
+            />
           </Stack.Protected>
         </Stack>
        <ClientSessionFeedback sessionDecided={sessionDecided} />

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AlertDialog, Button, Host, Text } from '@expo/ui/jetpack-compose';
+import { AlertDialog, Button, Column, Host, Text, TextField, useNativeState } from '@expo/ui/jetpack-compose';
+import { fillMaxWidth } from '@expo/ui/jetpack-compose/modifiers';
 
 import { useAppTheme } from '@/theme/app-theme';
 
@@ -21,10 +22,15 @@ export interface NativeAlertButton {
   onPress?: () => void;
 }
 
+interface PromptDraft {
+  value: string;
+}
+
 interface AlertRequest {
   title: string;
   message?: string;
   buttons: NativeAlertButton[];
+  prompt?: PromptDraft;
 }
 
 let request: AlertRequest | null = null;
@@ -37,6 +43,24 @@ export function showAlert(
   buttons?: NativeAlertButton[],
 ): void {
   request = { title, buttons: buttons ?? [] };
+  if (message !== undefined) request.message = message;
+  for (const listener of listeners) listener();
+}
+
+export function showPrompt(
+  title: string,
+  message: string | undefined,
+  options: { cancelText: string; confirmText: string; defaultValue?: string; onConfirm: (value: string) => void },
+): void {
+  const prompt = { value: options.defaultValue ?? '' };
+  request = {
+    title,
+    prompt,
+    buttons: [
+      { style: 'cancel', text: options.cancelText },
+      { text: options.confirmText, onPress: () => options.onConfirm(prompt.value) },
+    ],
+  };
   if (message !== undefined) request.message = message;
   for (const listener of listeners) listener();
 }
@@ -60,7 +84,7 @@ export function NativeAlertHost(): React.JSX.Element | null {
   }, []);
 
   if (!request) return null;
-  const { title, message, buttons } = request;
+  const { title, message, buttons, prompt } = request;
 
   const press = (button: NativeAlertButton) => {
     close();
@@ -98,11 +122,16 @@ export function NativeAlertHost(): React.JSX.Element | null {
         <AlertDialog.Title>
           <Text style={{ fontSize: 22, lineHeight: 28 }}>{title}</Text>
         </AlertDialog.Title>
-        {message ? (
+        {message || prompt ? (
           <AlertDialog.Text>
-            <Text style={{ fontSize: 14, lineHeight: 20 }} color={colors.secondaryLabel as string}>
-              {message}
-            </Text>
+            <Column verticalArrangement={{ spacedBy: 12 }}>
+              {message ? (
+                <Text style={{ fontSize: 14, lineHeight: 20 }} color={colors.secondaryLabel as string}>
+                  {message}
+                </Text>
+              ) : null}
+              {prompt ? <NativePromptInput draft={prompt} /> : null}
+            </Column>
           </AlertDialog.Text>
         ) : null}
         {cancelButton ? (
@@ -115,5 +144,17 @@ export function NativeAlertHost(): React.JSX.Element | null {
         ))}
       </AlertDialog>
     </Host>
+  );
+}
+
+function NativePromptInput({ draft }: { draft: PromptDraft }) {
+  const value = useNativeState(draft.value);
+  return (
+    <TextField
+      modifiers={[fillMaxWidth()]}
+      onValueChange={(text) => { draft.value = text; }}
+      singleLine
+      value={value}
+    />
   );
 }

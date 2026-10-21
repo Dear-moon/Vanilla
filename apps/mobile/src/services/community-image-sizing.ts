@@ -16,14 +16,8 @@ export function fitImageWithin(size: ImageSize, maxDimension: number): ImageSize
   return roundSize({ height: size.height * scale, width: size.width * scale });
 }
 
-// Size an uploaded image is inserted into the editor with.
-export function editorImageSize(size: ImageSize, editorWidth: number): ImageSize {
-  if (!(size.width > 0 && size.height > 0)) return { height: 1, width: 1 };
-  const width = Math.max(1, Math.min(size.width, Math.floor(editorWidth)));
-  return { height: Math.max(1, Math.round((size.height * width) / size.width)), width };
-}
-
-// File name sent with an upload: the original stem (path and extension stripped) with `extension`, or a generated name when there is none.
+/** File name sent with an upload: the original stem (path and extension
+ * stripped) with `extension`, or a generated name when there is none. */
 export function communityImageFileName(
   originalName: string | null | undefined,
   extension: string,
